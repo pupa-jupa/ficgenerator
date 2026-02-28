@@ -1,0 +1,8 @@
+{
+  "name": "fanfic-generator",
+  "version": "1.0.0",
+  "description": "Генератор фанфиков на Gemini AI",
+  "engines": {
+    "node": ">=18.x"
+  }
+}
