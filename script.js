@@ -1,6 +1,50 @@
 'use strict';
 
 /* ==========================================
+   НАСТРОЙКИ И API КЛЮЧ
+========================================== */
+const apiKeyInput = document.getElementById('apiKeyInput');
+const modelSelect = document.getElementById('modelSelect');
+const saveKeyBtn  = document.getElementById('saveKeyBtn');
+const keyStatus   = document.getElementById('keyStatus');
+
+// Загружаем настройки при входе
+let userGeminiKey = localStorage.getItem('gemini_api_key') || '';
+let selectedModel = localStorage.getItem('gemini_model') || 'gemini-2.0-flash';
+
+if (userGeminiKey) apiKeyInput.value = userGeminiKey;
+modelSelect.value = selectedModel;
+
+saveKeyBtn.addEventListener('click', () => {
+  const key = apiKeyInput.value.trim();
+  const model = modelSelect.value;
+  
+  if (key) {
+    localStorage.setItem('gemini_api_key', key);
+    localStorage.setItem('gemini_model', model);
+    userGeminiKey = key;
+    selectedModel = model;
+    keyStatus.textContent = '✅ Настройки успешно сохранены в браузере!';
+    keyStatus.style.color = '#5b8c5a';
+  } else {
+    localStorage.removeItem('gemini_api_key');
+    userGeminiKey = '';
+    keyStatus.textContent = '❌ Ключ удалён.';
+    keyStatus.style.color = '#c4555a';
+  }
+  setTimeout(() => { keyStatus.textContent = ''; }, 3000);
+});
+
+function requireApiKey() {
+  if (!userGeminiKey) {
+    alert('Сначала нужно ввести бесплатный ключ Google Gemini в настройках!');
+    document.querySelector('.tab-btn[data-tab="settings"]').click();
+    return false;
+  }
+  return true;
+}
+
+/* ==========================================
    СПИСОК ИДЕЙ
 ========================================== */
 const FANFIC_IDEAS = [
@@ -66,7 +110,6 @@ const FANFIC_IDEAS = [
   { genre:"🃏 Твисты и Парадоксы", title:"«Персонаж №4»", text:"(Ориджинал) Герой осознаёт, что он — второстепенный персонаж в плохом фанфике. Он начинает саботировать сюжет, отказываясь говорить свои реплики, чтобы заставить Автора обратить на него внимание." },
 ];
 
-/* Перемешивание массива (Fisher-Yates) */
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -270,35 +313,101 @@ function collectForm() {
 }
 
 /* ==========================================
-   ГЕНЕРАЦИЯ ФАНФИКА
+   ГЕНЕРАЦИЯ ПРОМПТА ДЛЯ ИСТОРИИ
+========================================== */
+function buildStoryPrompt(data) {
+  let p = `Ты талантливый и профессиональный писатель-фикрайтер. Напиши художественный текст (историю) на русском языке.\n\n`;
+  if (data.storyType === 'fandom' && data.fandomName) p += `Фандом: ${data.fandomName}\n`;
+  else p += `Тип истории: Ориджинал (оригинальная история)\n`;
+
+  if (data.pairings) p += `Пэйринги/Отношения: ${data.pairings}\n`;
+  if (data.characters) p += `Персонажи: ${data.characters}\n`;
+  if (data.genres && data.genres.length) p += `Жанры: ${data.genres.join(', ')}\n`;
+  p += `Рейтинг: ${data.rating}\n`;
+  if (data.plotDescription) p += `Сюжет/Завязка: ${data.plotDescription}\n`;
+  if (data.authorNotes) p += `Пожелания к стилю: ${data.authorNotes}\n`;
+
+  const lengths = { 1: "Короткая сцена (около 500-1000 слов)", 2: "Средний рассказ (около 1500-3000 слов)", 3: "Длинная история (около 4000+ слов)" };
+  p += `Объем: ${lengths[data.length]}\n`;
+  p += `Тональность (1-трагедия, 10-флафф): ${data.tone}/10\n`;
+
+  const triggers = [];
+  if (data.addProfanity) triggers.push("разрешена нецензурная лексика");
+  if (data.charDeath) triggers.push("СМЕРТЬ ОСНОВНОГО ПЕРСОНАЖА");
+  if (data.triggerWarnings) triggers.push(data.triggerWarnings);
+  if (triggers.length) p += `Предупреждения: ${triggers.join(', ')}\n`;
+
+  if (data.image) p += `\nЯ также прикрепил картинку. Пожалуйста, опиши атмосферу или детали из этой картинки в тексте истории.\n`;
+
+  p += `\nПиши сразу готовый художественный текст, без приветствий и предисловий. Используй абзацы, красивые описания и живые диалоги.`;
+  return p;
+}
+
+/* ==========================================
+   ГЕНЕРАЦИЯ ЧЕРЕЗ GOOGLE GEMINI API (КЛИЕНТ)
+========================================== */
+async function callGemini(promptText, imageData = null, mimeType = null) {
+  // Используем модель, которую выбрал пользователь
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${userGeminiKey}`;
+  
+  const parts = [{ text: promptText }];
+  if (imageData && mimeType) {
+    parts.push({
+      inline_data: { mime_type: mimeType, data: imageData }
+    });
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: parts }],
+      generationConfig: { temperature: 0.7 }
+    })
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error?.message || 'Ошибка генерации');
+  if (!data.candidates || !data.candidates[0].content) throw new Error('Нейросеть вернула пустой ответ');
+  
+  return data.candidates[0].content.parts[0].text;
+}
+
+/* ==========================================
+   ГЕНЕРАЦИЯ ФАНФИКА (КНОПКА)
 ========================================== */
 const pagesContainer = document.getElementById('pagesContainer');
 const tabNav         = document.querySelector('.tab-nav');
 const loadingScreen  = document.getElementById('loadingScreen');
 const resultScreen   = document.getElementById('resultScreen');
+const loadingModelInfo = document.getElementById('loadingModelInfo');
 let currentStoryData = null;
 
 document.getElementById('generateBtn').addEventListener('click', async () => {
+  if (!requireApiKey()) return;
+
   const formData = collectForm();
   pagesContainer.style.display = 'none';
   tabNav.style.display         = 'none';
   resultScreen.classList.remove('visible');
+  
+  // Обновляем текст загрузки в зависимости от модели
+  loadingModelInfo.textContent = selectedModel.includes('pro') 
+    ? 'Пишет Gemini 1.5 Pro (это займет чуть больше времени, но результат того стоит)...' 
+    : 'Пишет быстрая Gemini 2.0 Flash...';
+    
   loadingScreen.classList.add('visible');
   startProgress('progressFill', 'progressNum');
 
   try {
-    const resp = await fetch('/api/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    });
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.error || 'Ошибка сервера');
+    const prompt = buildStoryPrompt(formData);
+    const text = await callGemini(prompt, formData.image, formData.imageMimeType);
+
     finishProgress('progressFill', 'progressNum');
     setTimeout(() => {
       loadingScreen.classList.remove('visible');
-      currentStoryData = { ...formData, text: data.text, date: new Date().toLocaleDateString('ru-RU') };
-      showResult(data.text, formData);
+      currentStoryData = { ...formData, text: text, date: new Date().toLocaleDateString('ru-RU') };
+      showResult(text, formData);
     }, 700);
   } catch (err) {
     clearInterval(progressInterval);
@@ -478,11 +587,13 @@ document.getElementById('ideaCopy').addEventListener('click', () => {
 });
 
 /* ==========================================
-   ИИ-ГЕНЕРАТОР СЮЖЕТА
+   ИИ-ГЕНЕРАТОР СЮЖЕТА (КЛИЕНТ)
 ========================================== */
 const plotLoadingScreen = document.getElementById('plotLoadingScreen');
 
 document.getElementById('generatePlotBtn').addEventListener('click', async () => {
+  if (!requireApiKey()) return;
+
   const input = document.getElementById('plotInput').value.trim();
   if (!input) { alert('Введи краткую идею для сюжета!'); return; }
 
@@ -491,18 +602,23 @@ document.getElementById('generatePlotBtn').addEventListener('click', async () =>
   startProgress('plotProgressFill', 'plotProgressNum');
 
   try {
-    const resp = await fetch('/api/plot', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idea: input }),
-    });
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.error || 'Ошибка сервера');
+    const prompt = `Ты — профессиональный автор фанфиков и литературных сюжетов. 
+На основе краткой идеи напиши подробный сюжет-синопсис (до 1000 слов) на русском языке.
+
+Структура ответа:
+1. **Завязка** — представь мир, героев и начальный конфликт
+2. **Развитие** — нарастание напряжения, ключевые события, повороты
+3. **Кульминация** — главное столкновение или открытие
+4. **Развязка** — как всё заканчивается, что меняется в героях
+
+Идея пользователя: ${input}`;
+
+    const text = await callGemini(prompt);
 
     finishProgress('plotProgressFill', 'plotProgressNum');
     setTimeout(() => {
       plotLoadingScreen.classList.remove('visible');
-      document.getElementById('plotResultText').textContent = data.text;
+      document.getElementById('plotResultText').textContent = text;
       document.getElementById('plotResult').style.display = 'block';
     }, 600);
   } catch (err) {

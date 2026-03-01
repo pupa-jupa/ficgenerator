@@ -24,9 +24,46 @@
     <button class="tab-btn active" data-tab="create">🪶 Создать историю</button>
     <button class="tab-btn" data-tab="library">📚 Моя библиотека</button>
     <button class="tab-btn" data-tab="plot">✨ Генерация сюжета</button>
+    <button class="tab-btn" data-tab="settings">⚙️ Настройки</button>
   </nav>
 
   <div class="pages-container" id="pagesContainer">
+
+    <!-- НАСТРОЙКИ (НОВАЯ ВКЛАДКА) -->
+    <div class="page" id="page-settings">
+      <h2 class="plot-page-title">⚙️ Настройки нейросети</h2>
+      <p class="plot-page-sub">Подключение к магии слов</p>
+      
+      <div class="form-block" style="max-width: 600px; margin: 0 auto;">
+        <div class="block-header">
+          <h3>Ключ API (Google Gemini)</h3>
+          <button class="help-btn" data-tooltip="Для работы сайта нужен твой личный бесплатный ключ. Он сохраняется только в твоём браузере и никуда не отправляется.">?</button>
+        </div>
+        <p style="font-size: 0.95rem; color: var(--text); line-height: 1.6; margin-bottom: 16px;">
+          Чтобы сайт мог бесплатно писать для тебя фанфики, нужно подключить его к нейросети Google Gemini. Это занимает ровно одну минуту:
+        </p>
+        <ol style="font-size: 0.9rem; color: var(--text2); line-height: 1.6; margin-bottom: 20px; padding-left: 20px;">
+          <li>Перейди на сайт <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--gold); font-weight: bold; text-decoration: none;">Google AI Studio ↗</a> (понадобится Google-аккаунт).</li>
+          <li>Нажми синюю кнопку <b>"Create API key"</b>.</li>
+          <li>Скопируй длинный код, который появится на экране.</li>
+          <li>Вставь его в поле ниже и нажми "Сохранить".</li>
+        </ol>
+        
+        <input type="password" id="apiKeyInput" placeholder="AIzaSy..." style="margin-bottom: 16px; font-family: monospace;" />
+        
+        <div class="block-header">
+          <h3>Выбор модели ИИ</h3>
+          <button class="help-btn" data-tooltip="Выбери, как именно ИИ будет писать. 2.0 Flash — быстро. 1.5 Pro — медленнее, но глубже и литературнее.">?</button>
+        </div>
+        <select id="modelSelect" style="margin-bottom: 20px;">
+          <option value="gemini-2.0-flash">Gemini 2.0 Flash (Быстро, хорошо описывает окружение)</option>
+          <option value="gemini-1.5-pro">Gemini 1.5 Pro (Медленно, глубокая психология, лучший слог)</option>
+        </select>
+
+        <button class="action-btn" id="saveKeyBtn" style="width: 100%;">💾 Сохранить настройки</button>
+        <p id="keyStatus" style="margin-top: 12px; font-size: 0.85rem; font-weight: bold; color: #2c1810; text-align: center;"></p>
+      </div>
+    </div>
 
     <!-- СОЗДАТЬ ИСТОРИЮ -->
     <div class="page active" id="page-create">
@@ -302,7 +339,7 @@
         <path class="cat-tail" d="M122,180 Q148,168 155,152 Q158,142 150,145" fill="none" stroke="#a88a68" stroke-width="7" stroke-linecap="round"/>
       </svg>
       <p class="loading-title">Пишу твою историю…</p>
-      <p class="loading-sub">котик листает страницы вдохновения</p>
+      <p class="loading-sub" id="loadingModelInfo">Подключение к магии слов</p>
       <div class="progress-wrap">
         <div class="progress-bar-bg"><div class="progress-fill" id="progressFill"></div></div>
         <div class="progress-num" id="progressNum">0%</div>
