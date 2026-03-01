@@ -108,7 +108,7 @@
         <div class="form-block">
           <div class="block-header">
             <h3>Жанр</h3>
-            <button class="help-btn" data-tooltip="Просто нажимай на жанры — можно выбрать сколько угодно без зажатия клавиш! Выбранные подсветятся.">?</button>
+            <button class="help-btn" data-tooltip="Просто нажимай на жанры — можно выбрать сколько угодно! Выбранные подсветятся.">?</button>
           </div>
           <div class="genre-chips" id="genreChips">
             <button type="button" class="genre-chip" data-value="Романтика">🎀 Романтика</button>
@@ -191,7 +191,6 @@
         </div>
 
         <button class="generate-btn" id="generateBtn">✨ Создать историю ✨</button>
-
       </div>
     </div>
 
@@ -207,17 +206,57 @@
 
     <!-- ГЕНЕРАЦИЯ СЮЖЕТА -->
     <div class="page" id="page-plot">
-      <div class="plot-placeholder">
-        <div class="plot-icon">✨</div>
-        <h2 class="library-title">Генерация сюжета</h2>
-        <p class="plot-sub">Здесь скоро появится волшебный инструмент<br />для создания сюжетов и завязок.</p>
-        <p class="plot-sub" style="margin-top:10px;">📖 Раздел в разработке — загляни позже!</p>
+      <h2 class="plot-page-title">✨ Генерация сюжета</h2>
+      <p class="plot-page-sub">Два инструмента для поиска вдохновения</p>
+
+      <!-- Плашка 1: Случайные идеи -->
+      <div class="plot-panel panel-ideas">
+        <div class="plot-panel-deco top-left">❦</div>
+        <div class="plot-panel-deco top-right">❦</div>
+        <div class="plot-panel-deco bottom-left">❦</div>
+        <div class="plot-panel-deco bottom-right">❦</div>
+        <div class="plot-panel-inner">
+          <div class="plot-panel-icon">🎲</div>
+          <h3 class="plot-panel-title">Генератор идей</h3>
+          <p class="plot-panel-desc">
+            Нажми на кнопку и получи случайную идею из нашей коллекции из 60 сюжетов.
+            Каждый раз — что-то новое!
+          </p>
+          <button class="plot-action-btn" id="getIdeaBtn">🎲 Получить случайную идею</button>
+        </div>
       </div>
+
+      <!-- Плашка 2: ИИ-генератор сюжета -->
+      <div class="plot-panel panel-ai">
+        <div class="plot-panel-deco top-left">❦</div>
+        <div class="plot-panel-deco top-right">❦</div>
+        <div class="plot-panel-deco bottom-left">❦</div>
+        <div class="plot-panel-deco bottom-right">❦</div>
+        <div class="plot-panel-inner">
+          <div class="plot-panel-icon">🤖</div>
+          <h3 class="plot-panel-title">ИИ-генератор сюжета</h3>
+          <p class="plot-panel-desc">
+            Напиши краткую идею в несколько слов — ИИ развернёт её в подробный сюжет
+            с завязкой, кульминацией и развязкой (до 1000 слов).
+          </p>
+          <textarea id="plotInput" class="plot-textarea" rows="3"
+            placeholder="Например: детектив в викторианской Англии влюбляется в главную подозреваемую…"></textarea>
+          <button class="plot-action-btn ai-btn" id="generatePlotBtn">✨ Сгенерировать сюжет</button>
+          <div id="plotResult" class="plot-result" style="display:none;">
+            <div class="plot-result-header">
+              <span>📜 Готовый сюжет</span>
+              <button class="copy-plot-btn" id="copyPlotBtn">📋 Скопировать</button>
+            </div>
+            <div id="plotResultText" class="plot-result-text"></div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
-  </div>
+  </div><!-- /pages-container -->
 
-  <!-- ЗАГРУЗКА -->
+  <!-- ЗАГРУЗКА (фанфик) -->
   <div class="loading-screen" id="loadingScreen">
     <div class="loading-card">
       <svg class="cat-svg" width="200" height="230" viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg">
@@ -265,10 +304,21 @@
       <p class="loading-title">Пишу твою историю…</p>
       <p class="loading-sub">котик листает страницы вдохновения</p>
       <div class="progress-wrap">
-        <div class="progress-bar-bg">
-          <div class="progress-fill" id="progressFill"></div>
-        </div>
+        <div class="progress-bar-bg"><div class="progress-fill" id="progressFill"></div></div>
         <div class="progress-num" id="progressNum">0%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ЗАГРУЗКА (сюжет) -->
+  <div class="loading-screen" id="plotLoadingScreen">
+    <div class="loading-card">
+      <div style="font-size:3rem; margin-bottom:12px; animation: glowPulse 1.8s ease-in-out infinite;">📜</div>
+      <p class="loading-title">Разрабатываю сюжет…</p>
+      <p class="loading-sub">ИИ придумывает завязку и развязку</p>
+      <div class="progress-wrap">
+        <div class="progress-bar-bg"><div class="progress-fill" id="plotProgressFill"></div></div>
+        <div class="progress-num" id="plotProgressNum">0%</div>
       </div>
     </div>
   </div>
@@ -288,8 +338,9 @@
     </div>
   </div>
 
-</div>
+</div><!-- /book-wrapper -->
 
+<!-- МОДАЛЬНОЕ: Чтение из библиотеки -->
 <div class="modal-overlay" id="readModal">
   <div class="modal-box">
     <button class="modal-close" id="modalClose">✕</button>
@@ -298,7 +349,29 @@
   </div>
 </div>
 
-<!-- Тултип-контейнер (один на всю страницу) -->
+<!-- МОДАЛЬНОЕ: Идея для фанфика -->
+<div class="idea-overlay" id="ideaModal">
+  <div class="idea-box">
+    <button class="idea-close" id="ideaClose">✕</button>
+    <!-- Угловые орнаменты переплетения -->
+    <div class="weave-corner tl"></div>
+    <div class="weave-corner tr"></div>
+    <div class="weave-corner bl"></div>
+    <div class="weave-corner br"></div>
+
+    <div class="idea-genre-badge" id="ideaGenre">Жанр</div>
+    <div class="idea-chain-divider">⋯ ✦ ⋯</div>
+    <div class="idea-title" id="ideaTitle"></div>
+    <div class="idea-text" id="ideaText"></div>
+    <div class="idea-chain-divider">⋯ ✦ ⋯</div>
+    <div class="idea-actions">
+      <button class="idea-btn" id="ideaNext">↻ Другая идея</button>
+      <button class="idea-btn copy" id="ideaCopy">📋 Скопировать</button>
+    </div>
+  </div>
+</div>
+
+<!-- Тултип -->
 <div class="tooltip-box" id="tooltipBox"></div>
 
 <script src="script.js"></script>
