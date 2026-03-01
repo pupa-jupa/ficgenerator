@@ -14,27 +14,24 @@
 
 <div class="book-wrapper">
 
-  <!-- ШАПКА -->
   <header class="book-header">
     <div class="header-ornament">✦ ✦ ✦</div>
     <h1>Генератор Фанфиков</h1>
-    <p class="subtitle">— Напиши свою историю с помощью магии слов —</p>
+    <p class="subtitle">— твоя шкатулка историй —</p>
   </header>
 
-  <!-- ВКЛАДКИ -->
   <nav class="tab-nav">
-    <button class="tab-btn active" data-tab="create">✍️ Создать историю</button>
+    <button class="tab-btn active" data-tab="create">🪶 Создать историю</button>
     <button class="tab-btn" data-tab="library">📚 Моя библиотека</button>
+    <button class="tab-btn" data-tab="plot">✨ Генерация сюжета</button>
   </nav>
 
-  <!-- КОНТЕЙНЕР СТРАНИЦ -->
   <div class="pages-container" id="pagesContainer">
 
-    <!-- ВКЛАДКА: СОЗДАТЬ -->
+    <!-- СОЗДАТЬ ИСТОРИЮ -->
     <div class="page active" id="page-create">
       <div class="form-container">
 
-        <!-- Тип истории -->
         <div class="form-block">
           <div class="block-header">
             <h3>Тип истории</h3>
@@ -43,121 +40,110 @@
           <div class="radio-group">
             <label class="radio-label">
               <input type="radio" name="storyType" value="fandom" checked />
-              <span class="radio-custom"></span>
-              Фандом
+              <span class="radio-custom"></span>Фандом
             </label>
             <label class="radio-label">
               <input type="radio" name="storyType" value="original" />
-              <span class="radio-custom"></span>
-              Ориджинал
+              <span class="radio-custom"></span>Ориджинал
             </label>
           </div>
         </div>
 
-        <!-- Название фандома -->
         <div class="form-block" id="fandom-block">
           <div class="block-header">
             <h3>Название фандома</h3>
-            <button class="help-btn" data-tooltip="Укажи из какого произведения твои персонажи. Например: «Атака Титанов», «Гарри Поттер», «Violet Evergarden», «Arcane».">?</button>
+            <button class="help-btn" data-tooltip="Из какого произведения твои персонажи? Например: «Атака Титанов», «Гарри Поттер», «Violet Evergarden», «Arcane».">?</button>
           </div>
           <input type="text" id="fandomName" placeholder="Например: Атака Титанов, Гарри Поттер…" />
         </div>
 
-        <!-- Пэйринги -->
         <div class="form-block">
           <div class="block-header">
             <h3>Пэйринги</h3>
-            <button class="help-btn" data-tooltip="Пэйринг — романтическая пара. Формат: Персонаж1/Персонаж2. Для дружбы: Персонаж1&Персонаж2. Например: «Леви/Эрен» или «Гермиона/Драко». Можно оставить пустым, если романтики не нужно.">?</button>
+            <button class="help-btn" data-tooltip="Романтическая пара: Персонаж1/Персонаж2. Для дружбы: Персонаж1&Персонаж2. Например: «Леви/Эрен», «Гермиона/Драко». Можно оставить пустым.">?</button>
           </div>
-          <input type="text" id="pairings" placeholder="Например: Леви/Эрен, Гермиона&Гарри…" />
+          <input type="text" id="pairings" placeholder="Например: Леви/Эрен, Гермиона&Драко…" />
         </div>
 
-        <!-- Персонажи -->
         <div class="form-block">
           <div class="block-header">
             <h3>Персонажи и описания</h3>
-            <button class="help-btn" data-tooltip="Перечисли персонажей и опиши их характер. Например: «Леви — холодный, но заботливый; Эрен — страстный и упрямый». Чем подробнее, тем точнее результат.">?</button>
+            <button class="help-btn" data-tooltip="Перечисли персонажей и опиши их характер. Например: «Леви — холодный, но заботливый; Эрен — страстный, упрямый». Чем подробнее — тем точнее результат.">?</button>
           </div>
-          <textarea id="characters" rows="3" placeholder="Укажи персонажей и их характеры, внешность, особенности…"></textarea>
+          <textarea id="characters" rows="3" placeholder="Персонажи и их характеры, особенности, как ты хочешь их видеть…"></textarea>
         </div>
 
-        <!-- Картинка-референс -->
         <div class="form-block">
           <div class="block-header">
             <h3>Картинка-референс</h3>
-            <button class="help-btn" data-tooltip="Загрузи картинку-вдохновение. ИИ «посмотрит» на неё и учтёт атмосферу, цвета и персонажей при написании. Поддерживаются JPG, PNG, WEBP.">?</button>
+            <button class="help-btn" data-tooltip="Загрузи картинку-вдохновение. ИИ посмотрит на неё и учтёт атмосферу при написании. Поддерживаются JPG, PNG, WEBP.">?</button>
           </div>
           <div class="file-upload-area" id="fileUploadArea">
             <input type="file" id="referenceImage" accept="image/*" hidden />
             <div class="upload-placeholder" id="uploadPlaceholder">
               <span class="upload-icon">🖼️</span>
               <p>Нажми или перетащи картинку сюда</p>
-              <p class="upload-hint">JPG, PNG, WEBP</p>
+              <p class="upload-hint">JPG · PNG · WEBP</p>
             </div>
             <div id="imagePreviewWrap" style="display:none; text-align:center;">
-              <img id="imagePreview" style="max-height:160px; border-radius:6px; border:1px solid var(--frame-color);" />
+              <img id="imagePreview" style="max-height:160px; border-radius:6px; border:1px solid var(--frame);" />
               <button id="removeImage" class="remove-img-btn">✕ Убрать</button>
             </div>
           </div>
         </div>
 
-        <!-- Рейтинг и жанры -->
-        <div class="form-block two-col">
-          <div class="sub-block">
-            <div class="block-header">
-              <h3>Рейтинг</h3>
-              <button class="help-btn" data-tooltip="G — для всех. PG-13 — лёгкие намёки, подростки. R — взрослые темы. NC-17 — откровенный контент 18+.">?</button>
-            </div>
-            <select id="rating">
-              <option value="G">G — Для всех</option>
-              <option value="PG-13" selected>PG-13 — Подростки</option>
-              <option value="R">R — Взрослые темы</option>
-              <option value="NC-17">NC-17 — 18+</option>
-            </select>
+        <div class="form-block">
+          <div class="block-header">
+            <h3>Рейтинг</h3>
+            <button class="help-btn" data-tooltip="G — для всех. PG-13 — лёгкие намёки, подростки. R — взрослые темы. NC-17 — откровенный контент 18+.">?</button>
           </div>
-          <div class="sub-block">
-            <div class="block-header">
-              <h3>Жанр</h3>
-              <button class="help-btn" data-tooltip="Удерживай Ctrl (или Cmd на Mac), чтобы выбрать несколько жанров одновременно.">?</button>
-            </div>
-            <select id="genre" multiple>
-              <option value="Романтика">Романтика</option>
-              <option value="Драма">Драма</option>
-              <option value="Ангст">Ангст</option>
-              <option value="Флафф">Флафф</option>
-              <option value="Хёртс/Комфорт">Хёртс/Комфорт</option>
-              <option value="AU (Альтернативная вселенная)">AU</option>
-              <option value="Приключения">Приключения</option>
-              <option value="Мистика">Мистика</option>
-              <option value="Юмор">Юмор</option>
-              <option value="Сюрреализм">Сюрреализм</option>
-            </select>
+          <select id="rating">
+            <option value="G">G — Для всех</option>
+            <option value="PG-13" selected>PG-13 — Подростки</option>
+            <option value="R">R — Взрослые темы</option>
+            <option value="NC-17">NC-17 — 18+</option>
+          </select>
+        </div>
+
+        <div class="form-block">
+          <div class="block-header">
+            <h3>Жанр</h3>
+            <button class="help-btn" data-tooltip="Просто нажимай на жанры — можно выбрать сколько угодно без зажатия клавиш! Выбранные подсветятся.">?</button>
+          </div>
+          <div class="genre-chips" id="genreChips">
+            <button type="button" class="genre-chip" data-value="Романтика">🎀 Романтика</button>
+            <button type="button" class="genre-chip" data-value="Драма">🌹 Драма</button>
+            <button type="button" class="genre-chip" data-value="Ангст">🖤 Ангст</button>
+            <button type="button" class="genre-chip" data-value="Флафф">☁️ Флафф</button>
+            <button type="button" class="genre-chip" data-value="Хёртс/Комфорт">🕯️ Хёртс/Комфорт</button>
+            <button type="button" class="genre-chip" data-value="AU">🌙 AU</button>
+            <button type="button" class="genre-chip" data-value="Приключения">⚔️ Приключения</button>
+            <button type="button" class="genre-chip" data-value="Мистика">🔮 Мистика</button>
+            <button type="button" class="genre-chip" data-value="Юмор">🍒 Юмор</button>
+            <button type="button" class="genre-chip" data-value="Сюрреализм">🌸 Сюрреализм</button>
           </div>
         </div>
 
-        <!-- Сюжет -->
         <div class="form-block">
           <div class="block-header">
             <h3>Завязка / Описание сюжета</h3>
-            <button class="help-btn" data-tooltip="Опиши, что должно произойти. Чем подробнее — тем лучше результат. Можно написать только идею: «Леви находит раненого Эрена за стенами и вынужден за ним ухаживать». Или описать несколько ключевых сцен.">?</button>
+            <button class="help-btn" data-tooltip="Опиши, что должно произойти. Чем подробнее — тем лучше. Например: «Леви находит раненого Эрена за стенами и вынужден за ним ухаживать». Можно описать несколько ключевых сцен.">?</button>
           </div>
-          <textarea id="plotDescription" rows="4" placeholder="Расскажи, о чём должна быть история. Ключевые события, настроение, финал…"></textarea>
+          <textarea id="plotDescription" rows="4" placeholder="Расскажи, о чём должна быть история. Ключевые события, финал, особые сцены…"></textarea>
         </div>
 
-        <!-- Примечания -->
         <div class="form-block">
           <div class="block-header">
             <h3>Примечания автора</h3>
-            <button class="help-btn" data-tooltip="Пожелания к стилю. Например: «Пиши от первого лица», «Добавь много диалогов», «Атмосфера дождливого осеннего вечера», «Вставь стихотворную строчку в конце».">?</button>
+            <button class="help-btn" data-tooltip="Пожелания к стилю. Например: «Пиши от первого лица», «Добавь много диалогов», «Атмосфера дождливого вечера», «Вставь стихотворную строчку в конце».">?</button>
           </div>
           <textarea id="authorNotes" rows="2" placeholder="Дополнительные пожелания по стилю, атмосфере, деталям…"></textarea>
         </div>
 
-        <!-- Тональность -->
         <div class="form-block">
           <div class="block-header">
             <h3>Тональность</h3>
-            <button class="help-btn" data-tooltip="Влево — больше драмы, слёз и напряжения. Вправо — больше тепла, уюта и счастливых моментов.">?</button>
+            <button class="help-btn" data-tooltip="Влево — больше драмы и слёз. Вправо — больше тепла, уюта и счастливых моментов.">?</button>
           </div>
           <div class="slider-row">
             <span class="slider-label left">💔 Драма</span>
@@ -167,21 +153,19 @@
           <div class="slider-value" id="toneValue">5 — Баланс</div>
         </div>
 
-        <!-- Длина -->
         <div class="form-block">
           <div class="block-header">
             <h3>Длина истории</h3>
-            <button class="help-btn" data-tooltip="Короткая — сцена или зарисовка (~1-2 тыс. слов). Средняя — полноценный одноглавовый фик (~3-5 тыс.). Длинная — многосценная история (~6-8 тыс. слов).">?</button>
+            <button class="help-btn" data-tooltip="Короткая — сцена (~1-2 тыс. слов). Средняя — полноценный фик (~3-5 тыс.). Длинная — многосценная история (~6-8 тыс. слов).">?</button>
           </div>
           <div class="slider-row">
-            <span class="slider-label left">📝 Короткая</span>
+            <span class="slider-label left">📝 Коротко</span>
             <input type="range" id="lengthSlider" min="1" max="3" value="2" />
-            <span class="slider-label right">📖 Длинная</span>
+            <span class="slider-label right">📖 Длинно</span>
           </div>
           <div class="slider-value" id="lengthValue">Средняя (~3-5 тыс. слов)</div>
         </div>
 
-        <!-- Доп. теги -->
         <div class="form-block">
           <div class="block-header">
             <h3>Дополнительные теги</h3>
@@ -190,32 +174,28 @@
           <div class="checkbox-group">
             <label class="checkbox-label">
               <input type="checkbox" id="cbProfanity" />
-              <span class="checkbox-custom"></span>
-              🤬 Нецензурная лексика
+              <span class="checkbox-custom"></span>🤬 Нецензурная лексика
             </label>
             <label class="checkbox-label">
               <input type="checkbox" id="cbCharDeath" />
-              <span class="checkbox-custom"></span>
-              💀 Смерть персонажа
+              <span class="checkbox-custom"></span>💀 Смерть персонажа
             </label>
             <label class="checkbox-label">
               <input type="checkbox" id="cbTrigger" />
-              <span class="checkbox-custom"></span>
-              ⚠️ Свои триггер-ворнинги
+              <span class="checkbox-custom"></span>⚠️ Свои триггер-ворнинги
             </label>
           </div>
           <div id="triggerBlock" style="display:none; margin-top:12px;">
-            <input type="text" id="triggerWarnings" placeholder="Укажи триггеры через запятую: насилие, тревога, ПТСР…" />
+            <input type="text" id="triggerWarnings" placeholder="Укажи триггеры через запятую: насилие, тревога…" />
           </div>
         </div>
 
-        <!-- Кнопка -->
         <button class="generate-btn" id="generateBtn">✨ Создать историю ✨</button>
 
       </div>
-    </div><!-- /page-create -->
+    </div>
 
-    <!-- ВКЛАДКА: БИБЛИОТЕКА -->
+    <!-- МОЯ БИБЛИОТЕКА -->
     <div class="page" id="page-library">
       <div class="library-container">
         <h2 class="library-title">📚 Моя Библиотека</h2>
@@ -225,54 +205,50 @@
       </div>
     </div>
 
-  </div><!-- /pages-container -->
+    <!-- ГЕНЕРАЦИЯ СЮЖЕТА -->
+    <div class="page" id="page-plot">
+      <div class="plot-placeholder">
+        <div class="plot-icon">✨</div>
+        <h2 class="library-title">Генерация сюжета</h2>
+        <p class="plot-sub">Здесь скоро появится волшебный инструмент<br />для создания сюжетов и завязок.</p>
+        <p class="plot-sub" style="margin-top:10px;">📖 Раздел в разработке — загляни позже!</p>
+      </div>
+    </div>
 
-  <!-- ЭКРАН ЗАГРУЗКИ -->
+  </div>
+
+  <!-- ЗАГРУЗКА -->
   <div class="loading-screen" id="loadingScreen">
     <div class="loading-card">
-      <!-- SVG: Котик-читатель -->
       <svg class="cat-svg" width="200" height="230" viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg">
-        <!-- Свет от лампы -->
         <ellipse cx="162" cy="85" rx="40" ry="22" fill="rgba(255,220,80,0.12)" class="lamp-glow"/>
-        <!-- Лампа-стойка -->
         <rect x="158" y="90" width="4" height="95" fill="#8b6914" rx="2"/>
         <rect x="150" y="183" width="20" height="6" fill="#8b6914" rx="3"/>
-        <!-- Абажур -->
         <polygon points="140,60 184,60 178,90 146,90" fill="#c8a96e" stroke="#8b6914" stroke-width="1.5"/>
         <circle cx="162" cy="72" r="5" fill="#ffe07a" class="lamp-bulb"/>
-        <!-- Плед -->
         <ellipse cx="88" cy="195" rx="68" ry="26" fill="#b87048"/>
         <path d="M24,188 Q55,164 88,168 Q121,164 152,188 Q144,208 88,212 Q32,208 24,188Z" fill="#c87850"/>
-        <path d="M44,192 Q65,178 85,186 Q105,178 126,186 Q146,178 152,186" fill="none" stroke="#a06038" stroke-width="1.5" opacity="0.5"/>
-        <!-- Тело котика -->
         <ellipse cx="88" cy="168" rx="34" ry="26" fill="#9b8060"/>
-        <!-- Голова -->
         <circle cx="88" cy="128" r="30" fill="#a88a68"/>
-        <!-- Уши -->
         <polygon points="64,106 57,85 78,100" fill="#a88a68"/>
         <polygon points="112,106 119,85 98,100" fill="#a88a68"/>
         <polygon points="65,104 60,88 76,100" fill="#e8a0a0"/>
         <polygon points="111,104 116,88 100,100" fill="#e8a0a0"/>
-        <!-- Очки -->
         <circle cx="78" cy="130" r="10" fill="rgba(180,220,255,0.18)" stroke="#3d2b1f" stroke-width="1.8"/>
         <circle cx="100" cy="130" r="10" fill="rgba(180,220,255,0.18)" stroke="#3d2b1f" stroke-width="1.8"/>
         <line x1="88" y1="130" x2="90" y2="130" stroke="#3d2b1f" stroke-width="1.8"/>
         <line x1="68" y1="130" x2="63" y2="128" stroke="#3d2b1f" stroke-width="1.5"/>
         <line x1="110" y1="130" x2="115" y2="128" stroke="#3d2b1f" stroke-width="1.5"/>
-        <!-- Глаза -->
         <ellipse cx="78" cy="130" rx="4" ry="3.5" fill="#2c1810"/>
         <ellipse cx="100" cy="130" rx="4" ry="3.5" fill="#2c1810"/>
         <circle cx="79.5" cy="129" r="1.2" fill="white"/>
         <circle cx="101.5" cy="129" r="1.2" fill="white"/>
-        <!-- Нос -->
         <ellipse cx="89" cy="139" rx="2.5" ry="1.8" fill="#d4888e"/>
         <path d="M86.5,140.5 Q89,144 91.5,140.5" fill="none" stroke="#d4888e" stroke-width="1.3"/>
-        <!-- Усы -->
         <line x1="58" y1="137" x2="76" y2="139" stroke="#6b5440" stroke-width="0.9" opacity="0.65"/>
         <line x1="58" y1="141" x2="76" y2="141" stroke="#6b5440" stroke-width="0.9" opacity="0.65"/>
         <line x1="102" y1="139" x2="120" y2="137" stroke="#6b5440" stroke-width="0.9" opacity="0.65"/>
         <line x1="102" y1="141" x2="120" y2="141" stroke="#6b5440" stroke-width="0.9" opacity="0.65"/>
-        <!-- Книга -->
         <g class="book-pages">
           <path d="M54,172 Q72,163 88,167 L88,200 Q72,196 54,200 Z" fill="#f5f0e8" stroke="#c4a882" stroke-width="1.5"/>
           <path d="M90,167 Q106,163 122,172 L122,200 Q106,196 90,200 Z" fill="#f5f0e8" stroke="#c4a882" stroke-width="1.5"/>
@@ -280,19 +256,14 @@
           <line x1="62" y1="177" x2="84" y2="175" stroke="#c4a882" stroke-width="0.9" opacity="0.6"/>
           <line x1="62" y1="182" x2="84" y2="180" stroke="#c4a882" stroke-width="0.9" opacity="0.6"/>
           <line x1="62" y1="187" x2="84" y2="185" stroke="#c4a882" stroke-width="0.9" opacity="0.6"/>
-          <line x1="62" y1="192" x2="84" y2="190" stroke="#c4a882" stroke-width="0.9" opacity="0.6"/>
           <line x1="94" y1="175" x2="116" y2="177" stroke="#c4a882" stroke-width="0.9" opacity="0.6"/>
           <line x1="94" y1="180" x2="116" y2="182" stroke="#c4a882" stroke-width="0.9" opacity="0.6"/>
           <line x1="94" y1="185" x2="116" y2="187" stroke="#c4a882" stroke-width="0.9" opacity="0.6"/>
-          <line x1="94" y1="190" x2="116" y2="192" stroke="#c4a882" stroke-width="0.9" opacity="0.6"/>
         </g>
-        <!-- Хвост -->
         <path class="cat-tail" d="M122,180 Q148,168 155,152 Q158,142 150,145" fill="none" stroke="#a88a68" stroke-width="7" stroke-linecap="round"/>
       </svg>
-
       <p class="loading-title">Пишу твою историю…</p>
-      <p class="loading-sub">Котик вдохновляется и подбирает слова</p>
-
+      <p class="loading-sub">котик листает страницы вдохновения</p>
       <div class="progress-wrap">
         <div class="progress-bar-bg">
           <div class="progress-fill" id="progressFill"></div>
@@ -300,9 +271,9 @@
         <div class="progress-num" id="progressNum">0%</div>
       </div>
     </div>
-  </div><!-- /loading -->
+  </div>
 
-  <!-- ЭКРАН РЕЗУЛЬТАТА -->
+  <!-- РЕЗУЛЬТАТ -->
   <div class="result-screen" id="resultScreen">
     <div class="result-header">
       <div class="result-ornament">✦ ✦ ✦</div>
@@ -317,9 +288,8 @@
     </div>
   </div>
 
-</div><!-- /book-wrapper -->
+</div>
 
-<!-- Модальное окно для чтения из библиотеки -->
 <div class="modal-overlay" id="readModal">
   <div class="modal-box">
     <button class="modal-close" id="modalClose">✕</button>
@@ -327,6 +297,9 @@
     <div class="modal-content" id="modalContent"></div>
   </div>
 </div>
+
+<!-- Тултип-контейнер (один на всю страницу) -->
+<div class="tooltip-box" id="tooltipBox"></div>
 
 <script src="script.js"></script>
 </body>
