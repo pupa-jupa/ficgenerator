@@ -1,463 +1,957 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>✦ Генератор Фанфиков ✦</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,600;0,700;1,400;1,600&family=Lora:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>✦ Генератор Фанфиков ✦</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,600;0,700;1,400;1,600&family=Lora:ital,wght@0,400;0,500;1,400;1,500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="book-wrapper">
+      <header class="book-header">
+        <div class="header-ornament">✦ ✦ ✦</div>
+        <h1>Генератор Фанфиков</h1>
+        <p class="subtitle">— твоя шкатулка историй —</p>
+      </header>
 
-<div class="book-wrapper">
+      <nav class="tab-nav">
+        <button class="tab-btn active" data-tab="create">
+          🪶 Создать историю
+        </button>
+        <button class="tab-btn" data-tab="library">📚 Моя библиотека</button>
+        <button class="tab-btn" data-tab="plot">✨ Генерация сюжета</button>
+        <button class="tab-btn" data-tab="settings">⚙️ Настройки</button>
+      </nav>
 
-  <header class="book-header">
-    <div class="header-ornament">✦ ✦ ✦</div>
-    <h1>Генератор Фанфиков</h1>
-    <p class="subtitle">— твоя шкатулка историй —</p>
-  </header>
-
-  <nav class="tab-nav">
-    <button class="tab-btn active" data-tab="create">🪶 Создать историю</button>
-    <button class="tab-btn" data-tab="library">📚 Моя библиотека</button>
-    <button class="tab-btn" data-tab="plot">✨ Генерация сюжета</button>
-    <button class="tab-btn" data-tab="settings">⚙️ Настройки</button>
-  </nav>
-
-  <div class="pages-container" id="pagesContainer">
-
-    <!-- НАСТРОЙКИ -->
-    <div class="page" id="page-settings">
-      <h2 class="plot-page-title">⚙️ Настройки нейросети</h2>
-      <p class="plot-page-sub">Подключение к магии слов</p>
-      <div class="form-block" style="max-width:600px;margin:0 auto;">
-        <div class="block-header">
-          <h3>Ключ API (Google Gemini)</h3>
-          <button class="help-btn" data-tooltip="Ключ сохраняется только в твоём браузере и никуда не передаётся.">?</button>
-        </div>
-        <p style="font-size:.95rem;color:var(--text);line-height:1.6;margin-bottom:16px;">
-          Чтобы сайт мог бесплатно писать для тебя фанфики, нужен личный ключ Google Gemini. Одна минута:
-        </p>
-        <ol style="font-size:.9rem;color:var(--text2);line-height:1.6;margin-bottom:20px;padding-left:20px;">
-          <li>Перейди на <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--gold);font-weight:bold;text-decoration:none;">Google AI Studio ↗</a></li>
-          <li>Нажми <b>"Create API key"</b></li>
-          <li>Скопируй длинный код</li>
-          <li>Вставь ниже и нажми "Сохранить"</li>
-        </ol>
-        <input type="password" id="apiKeyInput" placeholder="AIzaSy..." style="margin-bottom:16px;font-family:monospace;" />
-        <div class="block-header">
-          <h3>Модель ИИ</h3>
-          <button class="help-btn" data-tooltip="Flash — быстрая и бесплатная. Pro — медленнее, но пишет глубже и литературнее.">?</button>
-        </div>
-        <select id="modelSelect" style="margin-bottom:20px;">
-          <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash (Быстрая, стабильная)</option>
-          <option value="gemini-2.5-pro">Gemini 2.5 Pro (Умная, литературная)</option>
-        </select>
-        <button class="action-btn" id="saveKeyBtn" style="width:100%;">💾 Сохранить настройки</button>
-        <p id="keyStatus" style="margin-top:12px;font-size:.85rem;font-weight:bold;text-align:center;"></p>
-      </div>
-    </div>
-
-    <!-- СОЗДАТЬ ИСТОРИЮ -->
-    <div class="page active" id="page-create">
-      <div class="form-container">
-
-        <div class="form-block">
-          <div class="block-header">
-            <h3>Тип истории</h3>
-            <button class="help-btn" data-tooltip="Фандом — история во вселенной существующего произведения. Ориджинал — полностью авторская история.">?</button>
-          </div>
-          <div class="radio-group">
-            <label class="radio-label"><input type="radio" name="storyType" value="fandom" checked /><span class="radio-custom"></span>Фандом</label>
-            <label class="radio-label"><input type="radio" name="storyType" value="original" /><span class="radio-custom"></span>Ориджинал</label>
-          </div>
-        </div>
-
-        <div class="form-block" id="fandom-block">
-          <div class="block-header">
-            <h3>Название фандома <button class="dice-btn" id="diceFandom" title="Случайный фандом">🎲</button></h3>
-            <button class="help-btn" data-tooltip="Из какого произведения твои персонажи? Например: «Атака Титанов», «Гарри Поттер».">?</button>
-          </div>
-          <input type="text" id="fandomName" placeholder="Например: Атака Титанов, Гарри Поттер…" />
-        </div>
-
-        <div class="form-block">
-          <div class="block-header">
-            <h3>Пэйринги <button class="dice-btn" id="dicePairings" title="Случайный троп отношений">🎲</button></h3>
-            <button class="help-btn" data-tooltip="Романтическая пара: Персонаж1/Персонаж2. Для дружбы: Персонаж1&Персонаж2.">?</button>
-          </div>
-          <input type="text" id="pairings" placeholder="Например: Леви/Эрен, Гермиона&Драко…" />
-        </div>
-
-        <!-- КАРТОЧКИ ПЕРСОНАЖЕЙ -->
-        <div class="form-block">
-          <div class="block-header">
-            <h3>Персонажи</h3>
-            <button class="help-btn" data-tooltip="Создай карточку для каждого важного персонажа. Чем подробнее — тем точнее ИИ передаст характер.">?</button>
-          </div>
-          <div id="characterCards"></div>
-          <button class="add-char-btn" id="addCharBtn">+ Добавить персонажа</button>
-        </div>
-
-        <div class="form-block">
-          <div class="block-header">
-            <h3>Картинка-референс</h3>
-            <button class="help-btn" data-tooltip="Загрузи картинку-вдохновение. ИИ учтёт её атмосферу при написании.">?</button>
-          </div>
-          <div class="file-upload-area" id="fileUploadArea">
-            <input type="file" id="referenceImage" accept="image/*" hidden />
-            <div class="upload-placeholder" id="uploadPlaceholder">
-              <span class="upload-icon">🖼️</span>
-              <p>Нажми или перетащи картинку сюда</p>
-              <p class="upload-hint">JPG · PNG · WEBP</p>
+      <div class="pages-container" id="pagesContainer">
+        <!-- НАСТРОЙКИ -->
+        <div class="page" id="page-settings">
+          <h2 class="plot-page-title">⚙️ Настройки нейросети</h2>
+          <p class="plot-page-sub">Подключение к магии слов</p>
+          <div class="form-block" style="max-width: 600px; margin: 0 auto">
+            <div class="block-header">
+              <h3>Ключ API (Google Gemini)</h3>
+              <button
+                class="help-btn"
+                data-tooltip="Ключ сохраняется только в твоём браузере и никуда не передаётся."
+              >
+                ?
+              </button>
             </div>
-            <div id="imagePreviewWrap" style="display:none;text-align:center;">
-              <img id="imagePreview" style="max-height:160px;border-radius:6px;border:1px solid var(--frame);" />
-              <button id="removeImage" class="remove-img-btn">✕ Убрать</button>
+            <p
+              style="
+                font-size: 0.95rem;
+                color: var(--text);
+                line-height: 1.6;
+                margin-bottom: 16px;
+              "
+            >
+              Чтобы сайт мог бесплатно писать для тебя фанфики, нужен личный
+              ключ Google Gemini. Одна минута:
+            </p>
+            <ol
+              style="
+                font-size: 0.9rem;
+                color: var(--text2);
+                line-height: 1.6;
+                margin-bottom: 20px;
+                padding-left: 20px;
+              "
+            >
+              <li>
+                Перейди на
+                <a
+                  href="https://aistudio.google.com/app/apikey"
+                  target="_blank"
+                  style="
+                    color: var(--gold);
+                    font-weight: bold;
+                    text-decoration: none;
+                  "
+                  >Google AI Studio ↗</a
+                >
+              </li>
+              <li>Нажми <b>"Create API key"</b></li>
+              <li>Скопируй длинный код</li>
+              <li>Вставь ниже и нажми "Сохранить"</li>
+            </ol>
+            <input
+              type="password"
+              id="apiKeyInput"
+              placeholder="AIzaSy..."
+              style="margin-bottom: 16px; font-family: monospace"
+            />
+            <div class="block-header">
+              <h3>Модель ИИ</h3>
+              <button
+                class="help-btn"
+                data-tooltip="Flash — быстрая и бесплатная. Pro — медленнее, но пишет глубже и литературнее."
+              >
+                ?
+              </button>
+            </div>
+            <select id="modelSelect" style="margin-bottom: 20px">
+              <option value="gemini-2.5-flash" selected>
+                Gemini 2.5 Flash (Быстрая, стабильная)
+              </option>
+              <option value="gemini-2.5-pro">
+                Gemini 2.5 Pro (Умная, литературная)
+              </option>
+            </select>
+            <button class="action-btn" id="saveKeyBtn" style="width: 100%">
+              💾 Сохранить настройки
+            </button>
+            <p
+              id="keyStatus"
+              style="
+                margin-top: 12px;
+                font-size: 0.85rem;
+                font-weight: bold;
+                text-align: center;
+              "
+            ></p>
+          </div>
+        </div>
+
+        <!-- СОЗДАТЬ ИСТОРИЮ -->
+        <div class="page active" id="page-create">
+          <div class="form-container">
+            <div class="form-block">
+              <div class="block-header">
+                <h3>Тип истории</h3>
+                <button
+                  class="help-btn"
+                  data-tooltip="Фандом — история во вселенной существующего произведения. Ориджинал — полностью авторская история."
+                >
+                  ?
+                </button>
+              </div>
+              <div class="radio-group">
+                <label class="radio-label"
+                  ><input
+                    type="radio"
+                    name="storyType"
+                    value="fandom"
+                    checked
+                  /><span class="radio-custom"></span>Фандом</label
+                >
+                <label class="radio-label"
+                  ><input type="radio" name="storyType" value="original" /><span
+                    class="radio-custom"
+                  ></span
+                  >Ориджинал</label
+                >
+              </div>
+            </div>
+
+            <div class="form-block" id="fandom-block">
+              <div class="block-header">
+                <h3>
+                  Название фандома
+                  <button
+                    class="dice-btn"
+                    id="diceFandom"
+                    title="Случайный фандом"
+                  >
+                    🎲
+                  </button>
+                </h3>
+                <button
+                  class="help-btn"
+                  data-tooltip="Из какого произведения твои персонажи? Например: «Атака Титанов», «Гарри Поттер»."
+                >
+                  ?
+                </button>
+              </div>
+              <input
+                type="text"
+                id="fandomName"
+                placeholder="Например: Атака Титанов, Гарри Поттер…"
+              />
+            </div>
+
+            <div class="form-block">
+              <div class="block-header">
+                <h3>
+                  Пэйринги
+                  <button
+                    class="dice-btn"
+                    id="dicePairings"
+                    title="Случайный троп отношений"
+                  >
+                    🎲
+                  </button>
+                </h3>
+                <button
+                  class="help-btn"
+                  data-tooltip="Романтическая пара: Персонаж1/Персонаж2. Для дружбы: Персонаж1&Персонаж2."
+                >
+                  ?
+                </button>
+              </div>
+              <input
+                type="text"
+                id="pairings"
+                placeholder="Например: Леви/Эрен, Гермиона&Драко…"
+              />
+            </div>
+
+            <!-- КАРТОЧКИ ПЕРСОНАЖЕЙ -->
+            <div class="form-block">
+              <div class="block-header">
+                <h3>Персонажи</h3>
+                <button
+                  class="help-btn"
+                  data-tooltip="Создай карточку для каждого важного персонажа. Чем подробнее — тем точнее ИИ передаст характер."
+                >
+                  ?
+                </button>
+              </div>
+              <div id="characterCards"></div>
+              <button class="add-char-btn" id="addCharBtn">
+                + Добавить персонажа
+              </button>
+            </div>
+
+            <div class="form-block">
+              <div class="block-header">
+                <h3>Картинка-референс</h3>
+                <button
+                  class="help-btn"
+                  data-tooltip="Загрузи картинку-вдохновение. ИИ учтёт её атмосферу при написании."
+                >
+                  ?
+                </button>
+              </div>
+              <div class="file-upload-area" id="fileUploadArea">
+                <input
+                  type="file"
+                  id="referenceImage"
+                  accept="image/*"
+                  hidden
+                />
+                <div class="upload-placeholder" id="uploadPlaceholder">
+                  <span class="upload-icon">🖼️</span>
+                  <p>Нажми или перетащи картинку сюда</p>
+                  <p class="upload-hint">JPG · PNG · WEBP</p>
+                </div>
+                <div
+                  id="imagePreviewWrap"
+                  style="display: none; text-align: center"
+                >
+                  <img
+                    id="imagePreview"
+                    style="
+                      max-height: 160px;
+                      border-radius: 6px;
+                      border: 1px solid var(--frame);
+                    "
+                  />
+                  <button id="removeImage" class="remove-img-btn">
+                    ✕ Убрать
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-block">
+              <div class="block-header">
+                <h3>Рейтинг</h3>
+                <button
+                  class="help-btn"
+                  data-tooltip="G — для всех. PG-13 — лёгкие намёки. R — взрослые темы. NC-17 — 18+."
+                >
+                  ?
+                </button>
+              </div>
+              <select id="rating">
+                <option value="G">G — Для всех</option>
+                <option value="PG-13" selected>PG-13 — Подростки</option>
+                <option value="R">R — Взрослые темы</option>
+                <option value="NC-17">NC-17 — 18+</option>
+              </select>
+            </div>
+
+            <div class="form-block">
+              <div class="block-header">
+                <h3>Жанр</h3>
+                <button
+                  class="help-btn"
+                  data-tooltip="Нажимай на жанры — можно выбрать несколько!"
+                >
+                  ?
+                </button>
+              </div>
+              <div class="genre-chips">
+                <button type="button" class="genre-chip" data-value="Романтика">
+                  🎀 Романтика
+                </button>
+                <button type="button" class="genre-chip" data-value="Драма">
+                  🌹 Драма
+                </button>
+                <button type="button" class="genre-chip" data-value="Ангст">
+                  🖤 Ангст
+                </button>
+                <button type="button" class="genre-chip" data-value="Флафф">
+                  ☁️ Флафф
+                </button>
+                <button
+                  type="button"
+                  class="genre-chip"
+                  data-value="Хёртс/Комфорт"
+                >
+                  🕯️ Хёртс/Комфорт
+                </button>
+                <button type="button" class="genre-chip" data-value="AU">
+                  🌙 AU
+                </button>
+                <button
+                  type="button"
+                  class="genre-chip"
+                  data-value="Приключения"
+                >
+                  ⚔️ Приключения
+                </button>
+                <button type="button" class="genre-chip" data-value="Мистика">
+                  🔮 Мистика
+                </button>
+                <button type="button" class="genre-chip" data-value="Юмор">
+                  🍒 Юмор
+                </button>
+                <button
+                  type="button"
+                  class="genre-chip"
+                  data-value="Сюрреализм"
+                >
+                  🌸 Сюрреализм
+                </button>
+              </div>
+            </div>
+
+            <!-- ФОРМАТ ИСТОРИИ -->
+            <div class="form-block">
+              <div class="block-header">
+                <h3>Формат истории</h3>
+                <button
+                  class="help-btn"
+                  data-tooltip="Полная история — законченный рассказ. Первая глава — начало с открытым финалом. Сцена — конкретный момент."
+                >
+                  ?
+                </button>
+              </div>
+              <select id="storyFormat">
+                <option value="full">📖 Полная история (One-shot)</option>
+                <option value="chapter">
+                  📑 Только первая глава (с открытым финалом)
+                </option>
+                <option value="scene">🎬 Конкретная сцена (момент)</option>
+              </select>
+            </div>
+
+            <div class="form-block">
+              <div class="block-header">
+                <h3>
+                  Завязка / Описание сюжета
+                  <button
+                    class="dice-btn"
+                    id="dicePlot"
+                    title="Случайный сюжетный троп"
+                  >
+                    🎲
+                  </button>
+                </h3>
+                <button
+                  class="help-btn"
+                  data-tooltip="Опиши, что должно произойти. Чем подробнее — тем лучше."
+                >
+                  ?
+                </button>
+              </div>
+              <textarea
+                id="plotDescription"
+                rows="4"
+                placeholder="Расскажи, о чём должна быть история…"
+              ></textarea>
+            </div>
+
+            <div class="form-block">
+              <div class="block-header">
+                <h3>Примечания автора</h3>
+                <button
+                  class="help-btn"
+                  data-tooltip="Пожелания к стилю: «Пиши от первого лица», «Много диалогов», «Атмосфера осени»."
+                >
+                  ?
+                </button>
+              </div>
+              <textarea
+                id="authorNotes"
+                rows="2"
+                placeholder="Дополнительные пожелания по стилю, атмосфере…"
+              ></textarea>
+            </div>
+
+            <div class="form-block">
+              <div class="block-header">
+                <h3>Тональность</h3>
+                <button
+                  class="help-btn"
+                  data-tooltip="Влево — больше драмы и слёз. Вправо — больше тепла и уюта."
+                >
+                  ?
+                </button>
+              </div>
+              <div class="slider-row">
+                <span class="slider-label left">💔 Драма</span>
+                <input
+                  type="range"
+                  id="toneSlider"
+                  min="1"
+                  max="10"
+                  value="5"
+                />
+                <span class="slider-label right">☁️ Флафф</span>
+              </div>
+              <div class="slider-value" id="toneValue">5 — Баланс</div>
+            </div>
+
+            <div class="form-block">
+              <div class="block-header">
+                <h3>Длина истории</h3>
+                <button
+                  class="help-btn"
+                  data-tooltip="Короткая ~1-2 тыс. слов. Средняя ~3-5 тыс. Длинная ~6-8 тыс."
+                >
+                  ?
+                </button>
+              </div>
+              <div class="slider-row">
+                <span class="slider-label left">📝 Коротко</span>
+                <input
+                  type="range"
+                  id="lengthSlider"
+                  min="1"
+                  max="3"
+                  value="2"
+                />
+                <span class="slider-label right">📖 Длинно</span>
+              </div>
+              <div class="slider-value" id="lengthValue">
+                Средняя (~3-5 тыс. слов)
+              </div>
+            </div>
+
+            <div class="form-block">
+              <div class="block-header">
+                <h3>Дополнительные теги</h3>
+                <button
+                  class="help-btn"
+                  data-tooltip="Отметь элементы, которые должны присутствовать в тексте."
+                >
+                  ?
+                </button>
+              </div>
+              <div class="checkbox-group">
+                <label class="checkbox-label"
+                  ><input type="checkbox" id="cbProfanity" /><span
+                    class="checkbox-custom"
+                  ></span
+                  >🤬 Нецензурная лексика</label
+                >
+                <label class="checkbox-label"
+                  ><input type="checkbox" id="cbCharDeath" /><span
+                    class="checkbox-custom"
+                  ></span
+                  >💀 Смерть персонажа</label
+                >
+                <label class="checkbox-label"
+                  ><input type="checkbox" id="cbTrigger" /><span
+                    class="checkbox-custom"
+                  ></span
+                  >⚠️ Свои триггер-ворнинги</label
+                >
+              </div>
+              <div id="triggerBlock" style="display: none; margin-top: 12px">
+                <input
+                  type="text"
+                  id="triggerWarnings"
+                  placeholder="Укажи триггеры через запятую…"
+                />
+              </div>
+            </div>
+
+            <button class="generate-btn" id="generateBtn">
+              ✨ Создать историю ✨
+            </button>
+          </div>
+        </div>
+
+        <!-- БИБЛИОТЕКА -->
+        <div class="page" id="page-library">
+          <div class="library-container">
+            <h2 class="library-title">📚 Моя Библиотека</h2>
+            <div id="libraryList" class="library-list">
+              <p class="empty-library">
+                Твоя библиотека пуста.<br />Создай первую историю!
+              </p>
             </div>
           </div>
         </div>
 
-        <div class="form-block">
-          <div class="block-header">
-            <h3>Рейтинг</h3>
-            <button class="help-btn" data-tooltip="G — для всех. PG-13 — лёгкие намёки. R — взрослые темы. NC-17 — 18+.">?</button>
-          </div>
-          <select id="rating">
-            <option value="G">G — Для всех</option>
-            <option value="PG-13" selected>PG-13 — Подростки</option>
-            <option value="R">R — Взрослые темы</option>
-            <option value="NC-17">NC-17 — 18+</option>
-          </select>
-        </div>
-
-        <div class="form-block">
-          <div class="block-header">
-            <h3>Жанр</h3>
-            <button class="help-btn" data-tooltip="Нажимай на жанры — можно выбрать несколько!">?</button>
-          </div>
-          <div class="genre-chips">
-            <button type="button" class="genre-chip" data-value="Романтика">🎀 Романтика</button>
-            <button type="button" class="genre-chip" data-value="Драма">🌹 Драма</button>
-            <button type="button" class="genre-chip" data-value="Ангст">🖤 Ангст</button>
-            <button type="button" class="genre-chip" data-value="Флафф">☁️ Флафф</button>
-            <button type="button" class="genre-chip" data-value="Хёртс/Комфорт">🕯️ Хёртс/Комфорт</button>
-            <button type="button" class="genre-chip" data-value="AU">🌙 AU</button>
-            <button type="button" class="genre-chip" data-value="Приключения">⚔️ Приключения</button>
-            <button type="button" class="genre-chip" data-value="Мистика">🔮 Мистика</button>
-            <button type="button" class="genre-chip" data-value="Юмор">🍒 Юмор</button>
-            <button type="button" class="genre-chip" data-value="Сюрреализм">🌸 Сюрреализм</button>
-          </div>
-        </div>
-
-        <!-- ФОРМАТ ИСТОРИИ -->
-        <div class="form-block">
-          <div class="block-header">
-            <h3>Формат истории</h3>
-            <button class="help-btn" data-tooltip="Полная история — законченный рассказ. Первая глава — начало с открытым финалом. Сцена — конкретный момент.">?</button>
-          </div>
-          <select id="storyFormat">
-            <option value="full">📖 Полная история (One-shot)</option>
-            <option value="chapter">📑 Только первая глава (с открытым финалом)</option>
-            <option value="scene">🎬 Конкретная сцена (момент)</option>
-          </select>
-        </div>
-
-        <div class="form-block">
-          <div class="block-header">
-            <h3>Завязка / Описание сюжета <button class="dice-btn" id="dicePlot" title="Случайный сюжетный троп">🎲</button></h3>
-            <button class="help-btn" data-tooltip="Опиши, что должно произойти. Чем подробнее — тем лучше.">?</button>
-          </div>
-          <textarea id="plotDescription" rows="4" placeholder="Расскажи, о чём должна быть история…"></textarea>
-        </div>
-
-        <div class="form-block">
-          <div class="block-header">
-            <h3>Примечания автора</h3>
-            <button class="help-btn" data-tooltip="Пожелания к стилю: «Пиши от первого лица», «Много диалогов», «Атмосфера осени».">?</button>
-          </div>
-          <textarea id="authorNotes" rows="2" placeholder="Дополнительные пожелания по стилю, атмосфере…"></textarea>
-        </div>
-
-        <div class="form-block">
-          <div class="block-header">
-            <h3>Тональность</h3>
-            <button class="help-btn" data-tooltip="Влево — больше драмы и слёз. Вправо — больше тепла и уюта.">?</button>
-          </div>
-          <div class="slider-row">
-            <span class="slider-label left">💔 Драма</span>
-            <input type="range" id="toneSlider" min="1" max="10" value="5" />
-            <span class="slider-label right">☁️ Флафф</span>
-          </div>
-          <div class="slider-value" id="toneValue">5 — Баланс</div>
-        </div>
-
-        <div class="form-block">
-          <div class="block-header">
-            <h3>Длина истории</h3>
-            <button class="help-btn" data-tooltip="Короткая ~1-2 тыс. слов. Средняя ~3-5 тыс. Длинная ~6-8 тыс.">?</button>
-          </div>
-          <div class="slider-row">
-            <span class="slider-label left">📝 Коротко</span>
-            <input type="range" id="lengthSlider" min="1" max="3" value="2" />
-            <span class="slider-label right">📖 Длинно</span>
-          </div>
-          <div class="slider-value" id="lengthValue">Средняя (~3-5 тыс. слов)</div>
-        </div>
-
-        <div class="form-block">
-          <div class="block-header">
-            <h3>Дополнительные теги</h3>
-            <button class="help-btn" data-tooltip="Отметь элементы, которые должны присутствовать в тексте.">?</button>
-          </div>
-          <div class="checkbox-group">
-            <label class="checkbox-label"><input type="checkbox" id="cbProfanity" /><span class="checkbox-custom"></span>🤬 Нецензурная лексика</label>
-            <label class="checkbox-label"><input type="checkbox" id="cbCharDeath" /><span class="checkbox-custom"></span>💀 Смерть персонажа</label>
-            <label class="checkbox-label"><input type="checkbox" id="cbTrigger" /><span class="checkbox-custom"></span>⚠️ Свои триггер-ворнинги</label>
-          </div>
-          <div id="triggerBlock" style="display:none;margin-top:12px;">
-            <input type="text" id="triggerWarnings" placeholder="Укажи триггеры через запятую…" />
-          </div>
-        </div>
-
-        <button class="generate-btn" id="generateBtn">✨ Создать историю ✨</button>
-      </div>
-    </div>
-
-    <!-- БИБЛИОТЕКА -->
-    <div class="page" id="page-library">
-      <div class="library-container">
-        <h2 class="library-title">📚 Моя Библиотека</h2>
-        <div id="libraryList" class="library-list">
-          <p class="empty-library">Твоя библиотека пуста.<br />Создай первую историю!</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- ГЕНЕРАЦИЯ СЮЖЕТА -->
-    <div class="page" id="page-plot">
-      <h2 class="plot-page-title">✨ Генерация сюжета</h2>
-      <p class="plot-page-sub">Два инструмента для поиска вдохновения</p>
-      <div class="plot-panel panel-ideas">
-        <div class="plot-panel-deco top-left">❦</div>
-        <div class="plot-panel-deco top-right">❦</div>
-        <div class="plot-panel-deco bottom-left">❦</div>
-        <div class="plot-panel-deco bottom-right">❦</div>
-        <div class="plot-panel-inner">
-          <div class="plot-panel-icon">🎲</div>
-          <h3 class="plot-panel-title">Генератор идей</h3>
-          <p class="plot-panel-desc">Нажми и получи случайную идею из коллекции из 60 сюжетов!</p>
-          <button class="plot-action-btn" id="getIdeaBtn">🎲 Получить случайную идею</button>
-        </div>
-      </div>
-      <div class="plot-panel panel-ai">
-        <div class="plot-panel-deco top-left">❦</div>
-        <div class="plot-panel-deco top-right">❦</div>
-        <div class="plot-panel-deco bottom-left">❦</div>
-        <div class="plot-panel-deco bottom-right">❦</div>
-        <div class="plot-panel-inner">
-          <div class="plot-panel-icon">🤖</div>
-          <h3 class="plot-panel-title">ИИ-генератор сюжета</h3>
-          <p class="plot-panel-desc">Напиши краткую идею — ИИ развернёт её в подробный сюжет с завязкой и развязкой.</p>
-          <textarea id="plotInput" class="plot-textarea" rows="3" placeholder="Например: детектив в викторианской Англии влюбляется в главную подозреваемую…"></textarea>
-          <button class="plot-action-btn ai-btn" id="generatePlotBtn">✨ Сгенерировать сюжет</button>
-          <div id="plotResult" class="plot-result" style="display:none;">
-            <div class="plot-result-header">
-              <span>📜 Готовый сюжет</span>
-              <button class="copy-plot-btn" id="copyPlotBtn">📋 Скопировать</button>
+        <!-- ГЕНЕРАЦИЯ СЮЖЕТА -->
+        <div class="page" id="page-plot">
+          <h2 class="plot-page-title">✨ Генерация сюжета</h2>
+          <p class="plot-page-sub">Два инструмента для поиска вдохновения</p>
+          <div class="plot-panel panel-ideas">
+            <div class="plot-panel-deco top-left">❦</div>
+            <div class="plot-panel-deco top-right">❦</div>
+            <div class="plot-panel-deco bottom-left">❦</div>
+            <div class="plot-panel-deco bottom-right">❦</div>
+            <div class="plot-panel-inner">
+              <div class="plot-panel-icon">🎲</div>
+              <h3 class="plot-panel-title">Генератор идей</h3>
+              <p class="plot-panel-desc">
+                Нажми и получи случайную идею из коллекции из 60 сюжетов!
+              </p>
+              <button class="plot-action-btn" id="getIdeaBtn">
+                🎲 Получить случайную идею
+              </button>
             </div>
-            <div id="plotResultText" class="plot-result-text"></div>
           </div>
+          <div class="plot-panel panel-ai">
+            <div class="plot-panel-deco top-left">❦</div>
+            <div class="plot-panel-deco top-right">❦</div>
+            <div class="plot-panel-deco bottom-left">❦</div>
+            <div class="plot-panel-deco bottom-right">❦</div>
+            <div class="plot-panel-inner">
+              <div class="plot-panel-icon">🤖</div>
+              <h3 class="plot-panel-title">ИИ-генератор сюжета</h3>
+              <p class="plot-panel-desc">
+                Напиши краткую идею — ИИ развернёт её в подробный сюжет с
+                завязкой и развязкой.
+              </p>
+              <textarea
+                id="plotInput"
+                class="plot-textarea"
+                rows="3"
+                placeholder="Например: детектив в викторианской Англии влюбляется в главную подозреваемую…"
+              ></textarea>
+              <button class="plot-action-btn ai-btn" id="generatePlotBtn">
+                ✨ Сгенерировать сюжет
+              </button>
+              <div id="plotResult" class="plot-result" style="display: none">
+                <div class="plot-result-header">
+                  <span>📜 Готовый сюжет</span>
+                  <button class="copy-plot-btn" id="copyPlotBtn">
+                    📋 Скопировать
+                  </button>
+                </div>
+                <div id="plotResultText" class="plot-result-text"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /pages-container -->
+
+      <!-- ЗАГРУЗКА (фанфик) -->
+      <div class="loading-screen" id="loadingScreen">
+        <div class="loading-card">
+          <svg
+            class="cat-svg"
+            width="200"
+            height="230"
+            viewBox="0 0 200 230"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <ellipse
+              cx="162"
+              cy="85"
+              rx="40"
+              ry="22"
+              fill="rgba(255,220,80,0.12)"
+              class="lamp-glow"
+            />
+            <rect x="158" y="90" width="4" height="95" fill="#8b6914" rx="2" />
+            <rect x="150" y="183" width="20" height="6" fill="#8b6914" rx="3" />
+            <polygon
+              points="140,60 184,60 178,90 146,90"
+              fill="#c8a96e"
+              stroke="#8b6914"
+              stroke-width="1.5"
+            />
+            <circle cx="162" cy="72" r="5" fill="#ffe07a" class="lamp-bulb" />
+            <ellipse cx="88" cy="195" rx="68" ry="26" fill="#b87048" />
+            <path
+              d="M24,188 Q55,164 88,168 Q121,164 152,188 Q144,208 88,212 Q32,208 24,188Z"
+              fill="#c87850"
+            />
+            <ellipse cx="88" cy="168" rx="34" ry="26" fill="#9b8060" />
+            <circle cx="88" cy="128" r="30" fill="#a88a68" />
+            <polygon points="64,106 57,85 78,100" fill="#a88a68" />
+            <polygon points="112,106 119,85 98,100" fill="#a88a68" />
+            <polygon points="65,104 60,88 76,100" fill="#e8a0a0" />
+            <polygon points="111,104 116,88 100,100" fill="#e8a0a0" />
+            <circle
+              cx="78"
+              cy="130"
+              r="10"
+              fill="rgba(180,220,255,0.18)"
+              stroke="#3d2b1f"
+              stroke-width="1.8"
+            />
+            <circle
+              cx="100"
+              cy="130"
+              r="10"
+              fill="rgba(180,220,255,0.18)"
+              stroke="#3d2b1f"
+              stroke-width="1.8"
+            />
+            <line
+              x1="88"
+              y1="130"
+              x2="90"
+              y2="130"
+              stroke="#3d2b1f"
+              stroke-width="1.8"
+            />
+            <line
+              x1="68"
+              y1="130"
+              x2="63"
+              y2="128"
+              stroke="#3d2b1f"
+              stroke-width="1.5"
+            />
+            <line
+              x1="110"
+              y1="130"
+              x2="115"
+              y2="128"
+              stroke="#3d2b1f"
+              stroke-width="1.5"
+            />
+            <ellipse cx="78" cy="130" rx="4" ry="3.5" fill="#2c1810" />
+            <ellipse cx="100" cy="130" rx="4" ry="3.5" fill="#2c1810" />
+            <circle cx="79.5" cy="129" r="1.2" fill="white" />
+            <circle cx="101.5" cy="129" r="1.2" fill="white" />
+            <ellipse cx="89" cy="139" rx="2.5" ry="1.8" fill="#d4888e" />
+            <path
+              d="M86.5,140.5 Q89,144 91.5,140.5"
+              fill="none"
+              stroke="#d4888e"
+              stroke-width="1.3"
+            />
+            <line
+              x1="58"
+              y1="137"
+              x2="76"
+              y2="139"
+              stroke="#6b5440"
+              stroke-width="0.9"
+              opacity="0.65"
+            />
+            <line
+              x1="58"
+              y1="141"
+              x2="76"
+              y2="141"
+              stroke="#6b5440"
+              stroke-width="0.9"
+              opacity="0.65"
+            />
+            <line
+              x1="102"
+              y1="139"
+              x2="120"
+              y2="137"
+              stroke="#6b5440"
+              stroke-width="0.9"
+              opacity="0.65"
+            />
+            <line
+              x1="102"
+              y1="141"
+              x2="120"
+              y2="141"
+              stroke="#6b5440"
+              stroke-width="0.9"
+              opacity="0.65"
+            />
+            <g class="book-pages">
+              <path
+                d="M54,172 Q72,163 88,167 L88,200 Q72,196 54,200 Z"
+                fill="#f5f0e8"
+                stroke="#c4a882"
+                stroke-width="1.5"
+              />
+              <path
+                d="M90,167 Q106,163 122,172 L122,200 Q106,196 90,200 Z"
+                fill="#f5f0e8"
+                stroke="#c4a882"
+                stroke-width="1.5"
+              />
+              <line
+                x1="88"
+                y1="167"
+                x2="90"
+                y2="200"
+                stroke="#8b6914"
+                stroke-width="2"
+              />
+              <line
+                x1="62"
+                y1="177"
+                x2="84"
+                y2="175"
+                stroke="#c4a882"
+                stroke-width="0.9"
+                opacity="0.6"
+              />
+              <line
+                x1="62"
+                y1="182"
+                x2="84"
+                y2="180"
+                stroke="#c4a882"
+                stroke-width="0.9"
+                opacity="0.6"
+              />
+              <line
+                x1="62"
+                y1="187"
+                x2="84"
+                y2="185"
+                stroke="#c4a882"
+                stroke-width="0.9"
+                opacity="0.6"
+              />
+              <line
+                x1="94"
+                y1="175"
+                x2="116"
+                y2="177"
+                stroke="#c4a882"
+                stroke-width="0.9"
+                opacity="0.6"
+              />
+              <line
+                x1="94"
+                y1="180"
+                x2="116"
+                y2="182"
+                stroke="#c4a882"
+                stroke-width="0.9"
+                opacity="0.6"
+              />
+              <line
+                x1="94"
+                y1="185"
+                x2="116"
+                y2="187"
+                stroke="#c4a882"
+                stroke-width="0.9"
+                opacity="0.6"
+              />
+            </g>
+            <path
+              class="cat-tail"
+              d="M122,180 Q148,168 155,152 Q158,142 150,145"
+              fill="none"
+              stroke="#a88a68"
+              stroke-width="7"
+              stroke-linecap="round"
+            />
+          </svg>
+          <p class="loading-title">Пишу твою историю…</p>
+          <p class="loading-sub" id="loadingModelInfo">
+            Подключение к магии слов
+          </p>
+          <div class="progress-wrap">
+            <div class="progress-bar-bg">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-num" id="progressNum">0%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ЗАГРУЗКА (сюжет) -->
+      <div class="loading-screen" id="plotLoadingScreen">
+        <div class="loading-card">
+          <div style="font-size: 3rem; margin-bottom: 12px">📜</div>
+          <p class="loading-title">Разрабатываю сюжет…</p>
+          <p class="loading-sub">ИИ придумывает завязку и развязку</p>
+          <div class="progress-wrap">
+            <div class="progress-bar-bg">
+              <div class="progress-fill" id="plotProgressFill"></div>
+            </div>
+            <div class="progress-num" id="plotProgressNum">0%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- РЕЗУЛЬТАТ -->
+      <div class="result-screen" id="resultScreen">
+        <div class="result-header">
+          <div class="result-ornament">✦ ✦ ✦</div>
+          <h2 id="resultTitle">Твоя История</h2>
+          <p class="result-meta" id="resultMeta"></p>
+        </div>
+
+        <!-- ПАНЕЛЬ ЧИТАЛКИ -->
+        <div class="reader-toolbar">
+          <span class="reader-label">Читалка:</span>
+          <button class="reader-btn" id="fontDecrease">A−</button>
+          <button class="reader-btn" id="fontIncrease">A+</button>
+          <button class="reader-btn" id="fontSerifToggle" title="Сменить шрифт">
+            Aa
+          </button>
+          <button class="reader-btn" id="darkModeToggle" title="Тёмная тема">
+            🌙
+          </button>
+        </div>
+
+        <!-- КНОПКИ РЕДАКТИРОВАНИЯ -->
+        <div class="edit-toolbar">
+          <span class="reader-label">Изменить:</span>
+          <button class="edit-btn" data-action="drama">
+            🌹 Добавить драму
+          </button>
+          <button class="edit-btn" data-action="twist">
+            ⚡ Сюжетный поворот
+          </button>
+          <button class="edit-btn" data-action="fluff">
+            ☁️ Добавить флафф
+          </button>
+          <button class="edit-btn" data-action="dialogue">
+            💬 Добавить диалог
+          </button>
+          <button class="edit-btn" data-action="continue">
+            📖 Написать продолжение
+          </button>
+        </div>
+
+        <div class="result-body" id="resultContent"></div>
+
+        <div class="result-actions">
+          <button class="action-btn" id="saveLibraryBtn">
+            📚 Сохранить в библиотеку
+          </button>
+          <button class="action-btn" id="downloadPdfBtn">📄 Скачать PDF</button>
+          <button class="action-btn secondary" id="newStoryBtn">
+            ✍️ Новая история
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- /book-wrapper -->
+
+    <!-- ШАБЛОН ДЛЯ ПЕЧАТИ PDF -->
+    <div id="printTemplate" style="display: none">
+      <div class="print-body">
+        <h1 id="printTitle"></h1>
+        <p id="printMeta"></p>
+        <hr />
+        <div id="printContent"></div>
+      </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ: Чтение из библиотеки -->
+    <div class="modal-overlay" id="readModal">
+      <div class="modal-box">
+        <button class="modal-close" id="modalClose">✕</button>
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-content" id="modalContent"></div>
+        <div
+          style="margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap"
+        >
+          <button class="action-btn" id="modalSummaryBtn">
+            ✨ Сгенерировать саммари
+          </button>
+        </div>
+        <div id="summaryResult" style="display: none; margin-top: 16px">
+          <div class="plot-result-header">
+            <span>📋 Саммари для публикации</span>
+            <button class="copy-plot-btn" id="copySummaryBtn">
+              📋 Скопировать
+            </button>
+          </div>
+          <div id="summaryText" class="plot-result-text"></div>
         </div>
       </div>
     </div>
 
-  </div><!-- /pages-container -->
-
-  <!-- ЗАГРУЗКА (фанфик) -->
-  <div class="loading-screen" id="loadingScreen">
-    <div class="loading-card">
-      <svg class="cat-svg" width="200" height="230" viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg">
-        <ellipse cx="162" cy="85" rx="40" ry="22" fill="rgba(255,220,80,0.12)" class="lamp-glow"/>
-        <rect x="158" y="90" width="4" height="95" fill="#8b6914" rx="2"/>
-        <rect x="150" y="183" width="20" height="6" fill="#8b6914" rx="3"/>
-        <polygon points="140,60 184,60 178,90 146,90" fill="#c8a96e" stroke="#8b6914" stroke-width="1.5"/>
-        <circle cx="162" cy="72" r="5" fill="#ffe07a" class="lamp-bulb"/>
-        <ellipse cx="88" cy="195" rx="68" ry="26" fill="#b87048"/>
-        <path d="M24,188 Q55,164 88,168 Q121,164 152,188 Q144,208 88,212 Q32,208 24,188Z" fill="#c87850"/>
-        <ellipse cx="88" cy="168" rx="34" ry="26" fill="#9b8060"/>
-        <circle cx="88" cy="128" r="30" fill="#a88a68"/>
-        <polygon points="64,106 57,85 78,100" fill="#a88a68"/>
-        <polygon points="112,106 119,85 98,100" fill="#a88a68"/>
-        <polygon points="65,104 60,88 76,100" fill="#e8a0a0"/>
-        <polygon points="111,104 116,88 100,100" fill="#e8a0a0"/>
-        <circle cx="78" cy="130" r="10" fill="rgba(180,220,255,0.18)" stroke="#3d2b1f" stroke-width="1.8"/>
-        <circle cx="100" cy="130" r="10" fill="rgba(180,220,255,0.18)" stroke="#3d2b1f" stroke-width="1.8"/>
-        <line x1="88" y1="130" x2="90" y2="130" stroke="#3d2b1f" stroke-width="1.8"/>
-        <line x1="68" y1="130" x2="63" y2="128" stroke="#3d2b1f" stroke-width="1.5"/>
-        <line x1="110" y1="130" x2="115" y2="128" stroke="#3d2b1f" stroke-width="1.5"/>
-        <ellipse cx="78" cy="130" rx="4" ry="3.5" fill="#2c1810"/>
-        <ellipse cx="100" cy="130" rx="4" ry="3.5" fill="#2c1810"/>
-        <circle cx="79.5" cy="129" r="1.2" fill="white"/>
-        <circle cx="101.5" cy="129" r="1.2" fill="white"/>
-        <ellipse cx="89" cy="139" rx="2.5" ry="1.8" fill="#d4888e"/>
-        <path d="M86.5,140.5 Q89,144 91.5,140.5" fill="none" stroke="#d4888e" stroke-width="1.3"/>
-        <line x1="58" y1="137" x2="76" y2="139" stroke="#6b5440" stroke-width="0.9" opacity="0.65"/>
-        <line x1="58" y1="141" x2="76" y2="141" stroke="#6b5440" stroke-width="0.9" opacity="0.65"/>
-        <line x1="102" y1="139" x2="120" y2="137" stroke="#6b5440" stroke-width="0.9" opacity="0.65"/>
-        <line x1="102" y1="141" x2="120" y2="141" stroke="#6b5440" stroke-width="0.9" opacity="0.65"/>
-        <g class="book-pages">
-          <path d="M54,172 Q72,163 88,167 L88,200 Q72,196 54,200 Z" fill="#f5f0e8" stroke="#c4a882" stroke-width="1.5"/>
-          <path d="M90,167 Q106,163 122,172 L122,200 Q106,196 90,200 Z" fill="#f5f0e8" stroke="#c4a882" stroke-width="1.5"/>
-          <line x1="88" y1="167" x2="90" y2="200" stroke="#8b6914" stroke-width="2"/>
-          <line x1="62" y1="177" x2="84" y2="175" stroke="#c4a882" stroke-width="0.9" opacity="0.6"/>
-          <line x1="62" y1="182" x2="84" y2="180" stroke="#c4a882" stroke-width="0.9" opacity="0.6"/>
-          <line x1="62" y1="187" x2="84" y2="185" stroke="#c4a882" stroke-width="0.9" opacity="0.6"/>
-          <line x1="94" y1="175" x2="116" y2="177" stroke="#c4a882" stroke-width="0.9" opacity="0.6"/>
-          <line x1="94" y1="180" x2="116" y2="182" stroke="#c4a882" stroke-width="0.9" opacity="0.6"/>
-          <line x1="94" y1="185" x2="116" y2="187" stroke="#c4a882" stroke-width="0.9" opacity="0.6"/>
-        </g>
-        <path class="cat-tail" d="M122,180 Q148,168 155,152 Q158,142 150,145" fill="none" stroke="#a88a68" stroke-width="7" stroke-linecap="round"/>
-      </svg>
-      <p class="loading-title">Пишу твою историю…</p>
-      <p class="loading-sub" id="loadingModelInfo">Подключение к магии слов</p>
-      <div class="progress-wrap">
-        <div class="progress-bar-bg"><div class="progress-fill" id="progressFill"></div></div>
-        <div class="progress-num" id="progressNum">0%</div>
+    <!-- МОДАЛЬНОЕ: Идея для фанфика -->
+    <div class="idea-overlay" id="ideaModal">
+      <div class="idea-box">
+        <button class="idea-close" id="ideaClose">✕</button>
+        <div class="weave-corner tl"></div>
+        <div class="weave-corner tr"></div>
+        <div class="weave-corner bl"></div>
+        <div class="weave-corner br"></div>
+        <div class="idea-genre-badge" id="ideaGenre">Жанр</div>
+        <div class="idea-chain-divider">⋯ ✦ ⋯</div>
+        <div class="idea-title" id="ideaTitle"></div>
+        <div class="idea-text" id="ideaText"></div>
+        <div class="idea-chain-divider">⋯ ✦ ⋯</div>
+        <div class="idea-actions">
+          <button class="idea-btn" id="ideaNext">↻ Другая идея</button>
+          <button class="idea-btn copy" id="ideaCopy">📋 Скопировать</button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- ЗАГРУЗКА (сюжет) -->
-  <div class="loading-screen" id="plotLoadingScreen">
-    <div class="loading-card">
-      <div style="font-size:3rem;margin-bottom:12px;">📜</div>
-      <p class="loading-title">Разрабатываю сюжет…</p>
-      <p class="loading-sub">ИИ придумывает завязку и развязку</p>
-      <div class="progress-wrap">
-        <div class="progress-bar-bg"><div class="progress-fill" id="plotProgressFill"></div></div>
-        <div class="progress-num" id="plotProgressNum">0%</div>
-      </div>
-    </div>
-  </div>
+    <!-- Тултип -->
+    <div class="tooltip-box" id="tooltipBox"></div>
 
-  <!-- РЕЗУЛЬТАТ -->
-  <div class="result-screen" id="resultScreen">
-    <div class="result-header">
-      <div class="result-ornament">✦ ✦ ✦</div>
-      <h2 id="resultTitle">Твоя История</h2>
-      <p class="result-meta" id="resultMeta"></p>
-    </div>
+    <!-- СТИЛИ ПЕЧАТИ -->
+    <style>
+      @media print {
+        body > * {
+          display: none !important;
+        }
+        #printTemplate {
+          display: block !important;
+        }
+        .print-body {
+          font-family: Georgia, serif;
+          background: #fff;
+          color: #2c1810;
+          max-width: 680px;
+          margin: 0 auto;
+          padding: 40px;
+          line-height: 1.9;
+        }
+        .print-body h1 {
+          font-size: 2rem;
+          text-align: center;
+          color: #8b6914;
+          margin-bottom: 6px;
+        }
+        .print-body p {
+          text-align: center;
+          font-style: italic;
+          color: #5c3d2e;
+          margin-bottom: 24px;
+        }
+        .print-body hr {
+          border: 1px solid #c4a882;
+          margin-bottom: 28px;
+        }
+      }
+    </style>
 
-    <!-- ПАНЕЛЬ ЧИТАЛКИ -->
-    <div class="reader-toolbar">
-      <span class="reader-label">Читалка:</span>
-      <button class="reader-btn" id="fontDecrease">A−</button>
-      <button class="reader-btn" id="fontIncrease">A+</button>
-      <button class="reader-btn" id="fontSerifToggle" title="Сменить шрифт">Aa</button>
-      <button class="reader-btn" id="darkModeToggle" title="Тёмная тема">🌙</button>
-    </div>
-
-    <!-- КНОПКИ РЕДАКТИРОВАНИЯ -->
-    <div class="edit-toolbar">
-      <span class="reader-label">Изменить:</span>
-      <button class="edit-btn" data-action="drama">🌹 Добавить драму</button>
-      <button class="edit-btn" data-action="twist">⚡ Сюжетный поворот</button>
-      <button class="edit-btn" data-action="fluff">☁️ Добавить флафф</button>
-      <button class="edit-btn" data-action="dialogue">💬 Добавить диалог</button>
-      <button class="edit-btn" data-action="continue">📖 Написать продолжение</button>
-    </div>
-
-    <div class="result-body" id="resultContent"></div>
-
-    <div class="result-actions">
-      <button class="action-btn" id="saveLibraryBtn">📚 Сохранить в библиотеку</button>
-      <button class="action-btn" id="downloadPdfBtn">📄 Скачать PDF</button>
-      <button class="action-btn secondary" id="newStoryBtn">✍️ Новая история</button>
-    </div>
-  </div>
-
-</div><!-- /book-wrapper -->
-
-<!-- ШАБЛОН ДЛЯ ПЕЧАТИ PDF -->
-<div id="printTemplate" style="display:none;">
-  <div class="print-body">
-    <h1 id="printTitle"></h1>
-    <p id="printMeta"></p>
-    <hr/>
-    <div id="printContent"></div>
-  </div>
-</div>
-
-<!-- МОДАЛЬНОЕ: Чтение из библиотеки -->
-<div class="modal-overlay" id="readModal">
-  <div class="modal-box">
-    <button class="modal-close" id="modalClose">✕</button>
-    <div class="modal-title" id="modalTitle"></div>
-    <div class="modal-content" id="modalContent"></div>
-    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
-      <button class="action-btn" id="modalSummaryBtn">✨ Сгенерировать саммари</button>
-    </div>
-    <div id="summaryResult" style="display:none;margin-top:16px;">
-      <div class="plot-result-header">
-        <span>📋 Саммари для публикации</span>
-        <button class="copy-plot-btn" id="copySummaryBtn">📋 Скопировать</button>
-      </div>
-      <div id="summaryText" class="plot-result-text"></div>
-    </div>
-  </div>
-</div>
-
-<!-- МОДАЛЬНОЕ: Идея для фанфика -->
-<div class="idea-overlay" id="ideaModal">
-  <div class="idea-box">
-    <button class="idea-close" id="ideaClose">✕</button>
-    <div class="weave-corner tl"></div>
-    <div class="weave-corner tr"></div>
-    <div class="weave-corner bl"></div>
-    <div class="weave-corner br"></div>
-    <div class="idea-genre-badge" id="ideaGenre">Жанр</div>
-    <div class="idea-chain-divider">⋯ ✦ ⋯</div>
-    <div class="idea-title" id="ideaTitle"></div>
-    <div class="idea-text" id="ideaText"></div>
-    <div class="idea-chain-divider">⋯ ✦ ⋯</div>
-    <div class="idea-actions">
-      <button class="idea-btn" id="ideaNext">↻ Другая идея</button>
-      <button class="idea-btn copy" id="ideaCopy">📋 Скопировать</button>
-    </div>
-  </div>
-</div>
-
-<!-- Тултип -->
-<div class="tooltip-box" id="tooltipBox"></div>
-
-<!-- СТИЛИ ПЕЧАТИ -->
-<style>
-@media print {
-  body > * { display: none !important; }
-  #printTemplate { display: block !important; }
-  .print-body {
-    font-family: Georgia, serif;
-    background: #fff;
-    color: #2c1810;
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 40px;
-    line-height: 1.9;
-  }
-  .print-body h1 {
-    font-size: 2rem;
-    text-align: center;
-    color: #8b6914;
-    margin-bottom: 6px;
-  }
-  .print-body p { text-align: center; font-style: italic; color: #5c3d2e; margin-bottom: 24px; }
-  .print-body hr { border: 1px solid #c4a882; margin-bottom: 28px; }
-}
-</style>
-
-<script src="script.js"></script>
-</body>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
+    <script src="script.js"></script>
+  </body>
 </html>

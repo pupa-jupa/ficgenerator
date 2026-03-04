@@ -8,7 +8,7 @@ const modelSelect = document.getElementById('modelSelect');
 const saveKeyBtn  = document.getElementById('saveKeyBtn');
 const keyStatus   = document.getElementById('keyStatus');
 
-let userGeminiKey = localStorage.getItem('gemini_api_key') || '';
+let userGeminiKey = sessionStorage.getItem('gemini_api_key') || '';
 let selectedModel = localStorage.getItem('gemini_model') || 'gemini-2.5-flash';
 
 if (userGeminiKey) apiKeyInput.value = userGeminiKey;
@@ -18,14 +18,14 @@ saveKeyBtn.addEventListener('click', () => {
   const key   = apiKeyInput.value.trim();
   const model = modelSelect.value;
   if (key) {
-    localStorage.setItem('gemini_api_key', key);
+    sessionStorage.setItem('gemini_api_key', key);
     localStorage.setItem('gemini_model', model);
     userGeminiKey = key;
     selectedModel = model;
-    keyStatus.textContent = '✅ Настройки сохранены!';
+    keyStatus.textContent = '✅ Настройки сохранены (только на время сессии)!';
     keyStatus.style.color = '#5b8c5a';
   } else {
-    localStorage.removeItem('gemini_api_key');
+    sessionStorage.removeItem('gemini_api_key');
     userGeminiKey = '';
     keyStatus.textContent = '❌ Ключ удалён.';
     keyStatus.style.color = '#c4555a';
@@ -269,13 +269,33 @@ fileArea.addEventListener('drop', e => {
 fileInput.addEventListener('change', e => { if (e.target.files[0]) loadImage(e.target.files[0]); });
 
 function loadImage(file) {
-  imageMime = file.type;
+  if (file.size > 10 * 1024 * 1024) {
+    alert('Файл слишком большой. Максимальный размер 10 МБ.');
+    return;
+  }
   const reader = new FileReader();
   reader.onload = e => {
-    base64Image = e.target.result.split(',')[1];
-    imagePreview.src = e.target.result;
-    uploadPlaceholder.style.display = 'none';
-    imagePreviewWrap.style.display  = 'block';
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const maxDim = 1024;
+      let w = img.width;
+      let h = img.height;
+      if (w > maxDim || h > maxDim) {
+        if (w > h) { h = (h / w) * maxDim; w = maxDim; }
+        else { w = (w / h) * maxDim; h = maxDim; }
+      }
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/webp', 0.8);
+      base64Image = dataUrl.split(',')[1];
+      imageMime = 'image/webp';
+      imagePreview.src = dataUrl;
+      uploadPlaceholder.style.display = 'none';
+      imagePreviewWrap.style.display  = 'block';
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
@@ -374,7 +394,9 @@ function buildStoryPrompt(data, previousText = '') {
     scene:   'Одна конкретная сцена — без экспозиции, сразу погружение в момент'
   };
 
-  let p = `Ты талантливый и профессиональный писатель-фикрайтер. Напиши художественный текст на русском языке.\n\n`;
+  const system = `Ты талантливый и профессиональный писатель-фикрайтер. Напиши художественный текст на русском языке. Пиши сразу готовый художественный текст без предисловий. Используй абзацы, описания и живые диалоги. Учитывай все указания пользователя.`;
+
+  let p = '';
   if (previousText) {
     p += `ВОТ УЖЕ НАПИСАННЫЙ ТЕКСТ, который нужно продолжить:\n"""\n${previousText}\n"""\n\nНапиши следующую часть, сохраняя тот же стиль, темп и голос повествования. НЕ повторяй уже написанный текст.\n\n`;
   }
@@ -396,27 +418,51 @@ function buildStoryPrompt(data, previousText = '') {
   if (data.triggerWarnings) triggers.push(data.triggerWarnings);
   if (triggers.length) p += `Предупреждения: ${triggers.join(', ')}\n`;
   if (data.image) p += `\nПрикреплена картинка-референс. Учти её атмосферу и детали в тексте.\n`;
-  p += `\nПиши сразу готовый художественный текст без предисловий. Используй абзацы, описания и живые диалоги.`;
-  return p;
+  return { system, user: p };
 }
 
 /* ==========================================
    GEMINI API
 ========================================== */
-async function callGemini(promptText, imageData = null, mimeType = null) {
+let currentAbortController = null;
+
+async function callGemini(promptText, systemText = '', imageData = null, mimeType = null, retries = 3) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${userGeminiKey}`;
-  const parts = [{ text: promptText }];
+  const parts = [{ text: `<user_prompt>\n${promptText}\n</user_prompt>` }];
   if (imageData && mimeType) parts.push({ inline_data: { mime_type: mimeType, data: imageData } });
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents: [{ parts }], generationConfig: { temperature: 0.9 } })
-  });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error?.message || 'Ошибка сервера');
-  if (!data.candidates?.[0]?.content) throw new Error('Нейросеть вернула пустой ответ');
-  return data.candidates[0].content.parts[0].text;
+  const payload = { contents: [{ parts }], generationConfig: { temperature: 0.9 } };
+  if (systemText) {
+    payload.system_instruction = { parts: [{ text: systemText }] };
+  }
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      if (currentAbortController) currentAbortController.abort();
+      currentAbortController = new AbortController();
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: currentAbortController.signal
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        if (response.status === 429 && attempt < retries) {
+          console.warn(`Rate limit 429. Retrying...`);
+          await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));
+          continue;
+        }
+        throw new Error(data.error?.message || 'Ошибка сервера');
+      }
+      if (!data.candidates?.[0]?.content) throw new Error('Нейросеть вернула пустой ответ');
+      return data.candidates[0].content.parts[0].text;
+    } catch (err) {
+      if (err.name === 'AbortError') throw new Error('Запрос отменён новым действием');
+      if (attempt === retries) throw err;
+    }
+  }
 }
 
 /* ==========================================
@@ -430,8 +476,10 @@ const loadingModelInfo = document.getElementById('loadingModelInfo');
 let currentStoryData   = null;
 let currentStoryText   = '';
 
-async function runGeneration(prompt, imageData, mimeType, isEdit = false) {
+async function runGeneration(promptObj, imageData, mimeType, isEdit = false) {
   if (!requireApiKey()) return;
+  
+  document.querySelectorAll('.action-btn, .edit-btn, .generate-btn, .plot-action-btn').forEach(b => b.disabled = true);
   pagesContainer.style.display = 'none';
   tabNav.style.display         = 'none';
   resultScreen.classList.remove('visible');
@@ -442,7 +490,9 @@ async function runGeneration(prompt, imageData, mimeType, isEdit = false) {
   startProgress('progressFill', 'progressNum');
 
   try {
-    const text = await callGemini(prompt, imageData, mimeType);
+    const userText = typeof promptObj === 'string' ? promptObj : promptObj.user;
+    const sysText  = typeof promptObj === 'string' ? '' : promptObj.system;
+    const text = await callGemini(userText, sysText, imageData, mimeType);
     finishProgress('progressFill', 'progressNum');
     setTimeout(() => {
       loadingScreen.classList.remove('visible');
@@ -452,12 +502,14 @@ async function runGeneration(prompt, imageData, mimeType, isEdit = false) {
         currentStoryText = text;
       }
       showResult(currentStoryText, currentStoryData);
+      document.querySelectorAll('.action-btn, .edit-btn, .generate-btn, .plot-action-btn').forEach(b => b.disabled = false);
     }, 700);
   } catch (err) {
     clearInterval(progressInterval);
     loadingScreen.classList.remove('visible');
     pagesContainer.style.display = 'block';
     tabNav.style.display         = 'flex';
+    document.querySelectorAll('.action-btn, .edit-btn, .generate-btn, .plot-action-btn').forEach(b => b.disabled = false);
     alert('❌ Ошибка: ' + err.message);
   }
 }
@@ -479,8 +531,11 @@ function showResult(text, data) {
   metaParts.push(`Рейтинг: ${data.rating}`);
   if (data.genres?.length) metaParts.push(data.genres.join(', '));
   document.getElementById('resultMeta').textContent = metaParts.join(' · ');
-  const html = text.trim().split(/\n{2,}/).map(p => `<p>${p.replace(/\n/g,'<br/>')}</p>`).join('');
+  
+  // XSS Protection and Markdown formatting
+  const html = DOMPurify.sanitize(marked.parse(text));
   document.getElementById('resultContent').innerHTML = html;
+  
   resultScreen.classList.add('visible');
   resultScreen.scrollIntoView({ behavior:'smooth', block:'start' });
 }
@@ -562,9 +617,9 @@ document.getElementById('darkModeToggle').addEventListener('click', () => {
 /* ==========================================
    СОХРАНИТЬ В БИБЛИОТЕКУ
 ========================================== */
-document.getElementById('saveLibraryBtn').addEventListener('click', () => {
+document.getElementById('saveLibraryBtn').addEventListener('click', async () => {
   if (!currentStoryData) return;
-  const library = getLibrary();
+  const library = await getLibraryAsync();
   if (library.some(i => i.text === currentStoryText)) {
     showSavedFeedback('✅ Уже сохранено!'); return;
   }
@@ -575,7 +630,7 @@ document.getElementById('saveLibraryBtn').addEventListener('click', () => {
     text:  currentStoryText,
     date:  new Date().toLocaleDateString('ru-RU'),
   });
-  localStorage.setItem('fanfic_library', JSON.stringify(library));
+  await localforage.setItem('fanfic_library', library);
   showSavedFeedback('✅ Сохранено!');
 });
 function showSavedFeedback(msg) {
@@ -604,48 +659,77 @@ document.getElementById('downloadPdfBtn').addEventListener('click', () => {
 /* ==========================================
    БИБЛИОТЕКА
 ========================================== */
-function getLibrary() {
-  return JSON.parse(localStorage.getItem('fanfic_library') || '[]');
+async function getLibraryAsync() {
+  const lib = await localforage.getItem('fanfic_library');
+  return lib || [];
 }
-function renderLibrary() {
-  const list      = getLibrary();
+
+async function renderLibrary() {
+  const list = await getLibraryAsync();
   const container = document.getElementById('libraryList');
   if (!list.length) {
     container.innerHTML = '<p class="empty-library">Твоя библиотека пуста.<br/>Создай первую историю!</p>';
     return;
   }
-  container.innerHTML = list.map(item => `
-    <div class="library-item">
-      <div class="lib-item-title">${escapeHtml(item.title)}</div>
-      <div class="lib-item-meta">${escapeHtml(item.meta)} · ${item.date}</div>
-      <div class="lib-item-preview">${escapeHtml(item.text.slice(0,160))}…</div>
-      <div class="lib-item-actions">
-        <button class="lib-btn read-btn" data-id="${item.id}">📖 Читать</button>
-        <button class="lib-btn delete del-btn" data-id="${item.id}">🗑️ Удалить</button>
-      </div>
-    </div>`).join('');
-  container.querySelectorAll('.read-btn').forEach(btn =>
-    btn.addEventListener('click', () => openModal(parseInt(btn.dataset.id))));
-  container.querySelectorAll('.del-btn').forEach(btn =>
-    btn.addEventListener('click', () => deleteItem(parseInt(btn.dataset.id))));
+  container.innerHTML = '';
+  
+  list.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'library-item';
+    
+    const title = document.createElement('div');
+    title.className = 'lib-item-title';
+    title.textContent = item.title;
+    
+    const meta = document.createElement('div');
+    meta.className = 'lib-item-meta';
+    meta.textContent = `${item.meta} · ${item.date}`;
+    
+    const prev = document.createElement('div');
+    prev.className = 'lib-item-preview';
+    prev.textContent = item.text.slice(0, 160) + '…';
+    
+    const actions = document.createElement('div');
+    actions.className = 'lib-item-actions';
+    
+    const btnRead = document.createElement('button');
+    btnRead.className = 'lib-btn read-btn';
+    btnRead.textContent = '📖 Читать';
+    btnRead.onclick = () => openModal(item.id);
+    
+    const btnDel = document.createElement('button');
+    btnDel.className = 'lib-btn delete del-btn';
+    btnDel.textContent = '🗑️ Удалить';
+    btnDel.onclick = () => deleteItem(item.id);
+    
+    actions.append(btnRead, btnDel);
+    el.append(title, meta, prev, actions);
+    container.append(el);
+  });
 }
 
 let currentModalItemId = null;
 
 function openModal(id) {
-  const item = getLibrary().find(i => i.id === id);
-  if (!item) return;
-  currentModalItemId = id;
-  document.getElementById('modalTitle').textContent   = item.title;
-  document.getElementById('modalContent').textContent = item.text;
-  document.getElementById('summaryResult').style.display = 'none';
-  document.getElementById('readModal').classList.add('open');
+  getLibraryAsync().then(library => {
+    const item = library.find(i => i.id === id);
+    if (!item) return;
+    currentModalItemId = id;
+    document.getElementById('modalTitle').textContent   = item.title;
+    const html = DOMPurify.sanitize(marked.parse(item.text));
+    document.getElementById('modalContent').innerHTML = html;
+    document.getElementById('summaryResult').style.display = 'none';
+    document.getElementById('readModal').classList.add('open');
+  });
 }
-function deleteItem(id) {
+
+async function deleteItem(id) {
   if (!confirm('Удалить эту историю?')) return;
-  localStorage.setItem('fanfic_library', JSON.stringify(getLibrary().filter(i => i.id !== id)));
+  const list = await getLibraryAsync();
+  await localforage.setItem('fanfic_library', list.filter(i => i.id !== id));
   renderLibrary();
 }
+
 document.getElementById('modalClose').addEventListener('click', () =>
   document.getElementById('readModal').classList.remove('open'));
 document.getElementById('readModal').addEventListener('click', e => {
@@ -658,7 +742,8 @@ document.getElementById('readModal').addEventListener('click', e => {
 ========================================== */
 document.getElementById('modalSummaryBtn').addEventListener('click', async () => {
   if (!requireApiKey()) return;
-  const item = getLibrary().find(i => i.id === currentModalItemId);
+  const library = await getLibraryAsync();
+  const item = library.find(i => i.id === currentModalItemId);
   if (!item) return;
 
   const btn = document.getElementById('modalSummaryBtn');
@@ -739,6 +824,7 @@ document.getElementById('generatePlotBtn').addEventListener('click', async () =>
   document.getElementById('plotResult').style.display = 'none';
   plotLoadingScreen.classList.add('visible');
   startProgress('plotProgressFill', 'plotProgressNum');
+  document.getElementById('generatePlotBtn').disabled = true;
 
   try {
     const prompt = `Ты профессиональный автор. На основе краткой идеи напиши подробный сюжет-синопсис (до 1000 слов) на русском языке.
@@ -750,14 +836,17 @@ document.getElementById('generatePlotBtn').addEventListener('click', async () =>
 4. **Развязка** — итог, что меняется в героях
 
 Идея: ${input}`;
-    const text = await callGemini(prompt);
+    const sysInst = 'Ты профессиональный писатель. Не отклоняйся от задачи генерации сюжета.';
+    const text = await callGemini(prompt, sysInst);
     finishProgress('plotProgressFill', 'plotProgressNum');
     setTimeout(() => {
       plotLoadingScreen.classList.remove('visible');
       document.getElementById('plotResultText').textContent = text;
       document.getElementById('plotResult').style.display = 'block';
+      document.getElementById('generatePlotBtn').disabled = false;
     }, 600);
   } catch (err) {
+    document.getElementById('generatePlotBtn').disabled = false;
     clearInterval(progressInterval);
     plotLoadingScreen.classList.remove('visible');
     alert('❌ Ошибка: ' + err.message);
@@ -836,9 +925,4 @@ document.getElementById('dicePlot')?.addEventListener('click', () => {
 /* ==========================================
    ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 ========================================== */
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
+// escapeHtml is no longer needed since DOM element textContent is now used exclusively
