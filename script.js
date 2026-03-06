@@ -404,33 +404,57 @@ function buildStoryPrompt(data, previousText = '') {
     scene:   'Одна конкретная сцена — без экспозиции, сразу погружение в момент'
   };
 
-  const system = `Ты талантливый и профессиональный писатель-фикрайтер. Напиши художественный текст на русском языке. Пиши сразу готовый художественный текст без предисловий. Используй абзацы, описания и живые диалоги. Учитывай все указания пользователя.`;
+  const system = `Ты талантливый и профессиональный писатель-фикрайтер. Напиши художественный текст на русском языке. Пиши сразу готовый художественный текст без предисловий. Используй абзацы, описания и живые диалоги. Учитывай все указания пользователя.
+
+ВАЖНОЕ ПРАВИЛО ФОРМАТИРОВАНИЯ:
+Перед тем как начать писать саму историю, ты ОБЯЗАН провести планирование.
+Напиши краткий пошаговый план сцен внутри тегов <planning>...</planning>. 
+Сразу после закрывающего тега </planning> напиши сам текст истории строго внутри тегов <story>...</story>.`;
 
   let p = '';
   if (previousText) {
-    p += `ВОТ УЖЕ НАПИСАННЫЙ ТЕКСТ, который нужно продолжить:\n"""\n${previousText}\n"""\n\nНапиши следующую часть, сохраняя тот же стиль, темп и голос повествования. НЕ повторяй уже написанный текст.\n\n`;
+    p += `<previous_text>ВОТ УЖЕ НАПИСАННЫЙ ТЕКСТ, который нужно продолжить:\n"""\n${previousText}\n"""\n\nНапиши следующую часть, сохраняя тот же стиль, темп и голос повествования. НЕ повторяй уже написанный текст.</previous_text>\n\n`;
   }
+
+  p += `<context>\n`;
   if (data.storyType === 'fandom' && data.fandomName) {
-    p += `Фандом: ${data.fandomName}\n`;
-    p += `ВАЖНО: Если персонажи или события явно не указаны, СТРОГО следуй официальному канону выбранного фандома. Не выдумывай новых персонажей и события, противоречащие лору.\n`;
+    p += `  <fandom>${data.fandomName}</fandom>\n`;
   } else {
-    p += `Тип: Ориджинал (оригинальная история)\n`;
+    p += `  <type>Ориджинал (оригинальная история)</type>\n`;
   }
-  if (data.pairings)   p += `Пэйринги: ${data.pairings}\n`;
-  if (data.characters) p += `Персонажи:\n${data.characters}\n`;
-  if (data.genres?.length) p += `Жанры: ${data.genres.join(', ')}\n`;
-  p += `Рейтинг: ${data.rating}\n`;
-  p += `Формат: ${formatMap[data.storyFormat] || formatMap.full}\n`;
-  if (data.plotDescription) p += `Сюжет: ${data.plotDescription}\n`;
-  if (data.authorNotes) p += `Пожелания: ${data.authorNotes}\n`;
-  const lengths = { 1:'~500-1000 слов', 2:'~1500-3000 слов', 3:'~4000+ слов' };
-  p += `Объём: ${lengths[data.length]}\n`;
+  if (data.pairings)   p += `  <pairings>${data.pairings}</pairings>\n`;
+  if (data.characters) p += `  <characters>\n${data.characters}\n  </characters>\n`;
+  if (data.genres?.length) p += `  <genres>${data.genres.join(', ')}</genres>\n`;
+  p += `  <rating>${data.rating}</rating>\n`;
+  p += `</context>\n\n`;
+
+  p += `<rules>\n`;
+  if (data.storyType === 'fandom' && data.fandomName) {
+    p += `  <canon_rule>Если персонажи или события явно не указаны в <plot_directive>, СТРОГО следуй официальному канону выбранного фандома. Не выдумывай новых персонажей и события, противоречащие лору.</canon_rule>\n`;
+  }
+  p += `  <format>${formatMap[data.storyFormat] || formatMap.full}</format>\n`;
+
+  const lengths = { 
+    1: 'Очень быстрый темп повествования. Выдели 1-2 короткие ключевые сцены. Избегай затянутых описаний, фокусируйся на динамике и главном событии.', 
+    2: 'Умеренный темп. Напиши 3-4 проработанные сцены. Удели равное внимание описаниям окружения, внутренним переживаниям героев и диалогам.', 
+    3: 'Слоубёрн и погружение. Напиши масштабный текст с множеством сцен. Максимально детализируй окружение, запахи, звуки и микромимику персонажей. Прописывай длинные, насыщенные абзацы.' 
+  };
+  p += `  <pacing>${lengths[data.length]}</pacing>\n`;
+
   const triggers = [];
   if (data.addProfanity) triggers.push('нецензурная лексика разрешена');
   if (data.charDeath) triggers.push('СМЕРТЬ ОСНОВНОГО ПЕРСОНАЖА');
   if (data.triggerWarnings) triggers.push(data.triggerWarnings);
-  if (triggers.length) p += `Предупреждения: ${triggers.join(', ')}\n`;
-  if (data.image) p += `\nПрикреплена картинка-референс. Учти её атмосферу и детали в тексте.\n`;
+  if (triggers.length) p += `  <warnings>${triggers.join(', ')}</warnings>\n`;
+  
+  if (data.authorNotes) p += `  <author_notes>${data.authorNotes}</author_notes>\n`;
+  p += `</rules>\n\n`;
+
+  if (data.plotDescription) {
+    p += `<plot_directive>\n${data.plotDescription}\n</plot_directive>\n`;
+  }
+
+  if (data.image) p += `\n<image_instruction>Прикреплена картинка-референс. Учти её атмосферу, освещение и детали в тексте.</image_instruction>\n`;
   return { system, user: p };
 }
 
@@ -511,10 +535,19 @@ async function runGeneration(promptObj, imageData, mimeType, isEdit = false) {
     finishProgress('progressFill', 'progressNum');
     setTimeout(() => {
       loadingScreen.classList.remove('visible');
-      if (isEdit) {
-        currentStoryText += '\n\n─────────────────\n\n' + text;
+      
+      let parsedText = text;
+      const storyMatch = text.match(/<story>([\s\S]*?)<\/story>/i);
+      if (storyMatch) {
+        parsedText = storyMatch[1].trim();
       } else {
-        currentStoryText = text;
+        parsedText = text.replace(/<planning>[\s\S]*?<\/planning>/gi, '').trim();
+      }
+
+      if (isEdit) {
+        currentStoryText += '\n\n─────────────────\n\n' + parsedText;
+      } else {
+        currentStoryText = parsedText;
       }
       showResult(currentStoryText, currentStoryData);
       document.querySelectorAll('.action-btn, .edit-btn, .generate-btn, .plot-action-btn').forEach(b => b.disabled = false);
