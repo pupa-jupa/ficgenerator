@@ -8,7 +8,7 @@ const modelSelect = document.getElementById('modelSelect');
 const saveKeyBtn  = document.getElementById('saveKeyBtn');
 const keyStatus   = document.getElementById('keyStatus');
 
-let userGeminiKey = localStorage.getItem('gemini_api_key') || '';
+let userGeminiKey = sessionStorage.getItem('gemini_api_key') || '';
 let selectedModel = localStorage.getItem('gemini_model') || 'gemini-2.5-flash';
 
 if (userGeminiKey) apiKeyInput.value = userGeminiKey;
@@ -18,14 +18,14 @@ saveKeyBtn.addEventListener('click', () => {
   const key   = apiKeyInput.value.trim();
   const model = modelSelect.value;
   if (key) {
-    localStorage.setItem('gemini_api_key', key);
+    sessionStorage.setItem('gemini_api_key', key);
     localStorage.setItem('gemini_model', model);
     userGeminiKey = key;
     selectedModel = model;
-    keyStatus.textContent = '✅ Настройки сохранены!';
+    keyStatus.textContent = '✅ Настройки сохранены (только на время сессии)!';
     keyStatus.style.color = '#5b8c5a';
   } else {
-    localStorage.removeItem('gemini_api_key');
+    sessionStorage.removeItem('gemini_api_key');
     userGeminiKey = '';
     keyStatus.textContent = '❌ Ключ удалён.';
     keyStatus.style.color = '#c4555a';
@@ -145,7 +145,7 @@ tabBtns.forEach(btn => {
    ТУЛТИПЫ
 ========================================== */
 const tooltipBox = document.getElementById('tooltipBox');
-document.querySelectorAll('.help-btn').forEach(btn => {
+document.querySelectorAll('[data-tooltip]').forEach(btn => {
   btn.addEventListener('mouseenter', () => {
     const text = btn.getAttribute('data-tooltip');
     if (!text) return;
@@ -154,11 +154,11 @@ document.querySelectorAll('.help-btn').forEach(btn => {
     const rect = btn.getBoundingClientRect();
     const tipW = 250;
     const tipH = tooltipBox.offsetHeight || 80;
-    let left = rect.left + rect.width / 2 - tipW / 2;
-    let top  = rect.top - tipH - 12;
+    let left = rect.left + window.scrollX + rect.width / 2 - tipW / 2;
+    let top  = rect.top + window.scrollY - tipH - 12;
     if (left < 8) left = 8;
     if (left + tipW > window.innerWidth - 8) left = window.innerWidth - tipW - 8;
-    if (top < 8) top = rect.bottom + 12;
+    if (top < window.scrollY + 8) top = rect.bottom + window.scrollY + 12;
     tooltipBox.style.left = left + 'px';
     tooltipBox.style.top  = top + 'px';
   });
@@ -185,6 +185,36 @@ document.querySelectorAll('input[name="storyType"]').forEach(r => {
 });
 
 /* ==========================================
+   РАНДОМ КНОПКИ (Фандом и Пэйринг)
+========================================== */
+const randomFandoms = [
+  "Гарри Поттер", "Шерлок", "Genshin Impact", "Ведьмак", 
+  "Звёздные войны", "Атака Титанов", "Marvel", "Киберпанк 2077",
+  "Сверхъестественное", "Властелин Колец"
+];
+const randomPairings = [
+  "Враги в любовники", "Друзья детства", "Коллеги", 
+  "Главный герой / Антагонист", "Следователь / Подозреваемый",
+  "Наставник / Ученик", "Ангел / Демон"
+];
+
+document.querySelectorAll('button[data-tooltip="Случайный фандом"]').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const input = document.getElementById('fandomName');
+    input.value = randomFandoms[Math.floor(Math.random() * randomFandoms.length)];
+  });
+});
+
+document.querySelectorAll('button[data-tooltip="Случайный пэйринг"]').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const input = document.getElementById('pairings');
+    input.value = randomPairings[Math.floor(Math.random() * randomPairings.length)];
+  });
+});
+
+/* ==========================================
    КАРТОЧКИ ПЕРСОНАЖЕЙ
 ========================================== */
 let charCount = 0;
@@ -201,28 +231,19 @@ function createCharCard() {
       <button class="char-remove" data-id="${id}">✕</button>
     </div>
     <input type="text" class="char-name" placeholder="Имя персонажа" />
-    <div class="char-role-group">
-      <label class="char-role-opt"><input type="radio" name="role_${id}" value="Главный герой" checked /><span>🌟 Главный герой</span></label>
-      <label class="char-role-opt"><input type="radio" name="role_${id}" value="Злодей" /><span>😈 Злодей</span></label>
-      <label class="char-role-opt"><input type="radio" name="role_${id}" value="Друг" /><span>💛 Друг</span></label>
-      <label class="char-role-opt"><input type="radio" name="role_${id}" value="Любовный интерес" /><span>💘 Любовный интерес</span></label>
-    </div>
-    <div class="char-trait-row">
-      <label class="char-trait-label">Добрый <span class="char-trait-val" id="traitGood_${id}">5</span> / Злой</label>
-      <input type="range" class="char-trait-slider" id="sliderGood_${id}" min="1" max="10" value="5" />
-    </div>
-    <div class="char-trait-row">
-      <label class="char-trait-label">Интроверт <span class="char-trait-val" id="traitIntro_${id}">5</span> / Экстраверт</label>
-      <input type="range" class="char-trait-slider" id="sliderIntro_${id}" min="1" max="10" value="5" />
-    </div>
+    <select class="char-archetype" id="arch_${id}" style="margin-bottom: 15px; width: 100%;">
+      <option value="Протагонист (Главный герой)">🌟 Протагонист (Главный герой)</option>
+      <option value="Антагонист (Злодей)">😈 Антагонист (Злодей)</option>
+      <option value="Верный друг / Сайдкик">💛 Верный друг / Сайдкик</option>
+      <option value="Любовный интерес">💘 Любовный интерес</option>
+      <option value="Наставник / Мудрец">🧠 Наставник / Мудрец</option>
+      <option value="Антигерой (Морально серый)">🗡️ Антигерой (Морально серый)</option>
+      <option value="Трикстер / Шут">🎭 Трикстер / Шут</option>
+      <option value="Защитник / Телохранитель">🛡️ Защитник / Телохранитель</option>
+      <option value="Второстепенный персонаж">👥 Второстепенный персонаж</option>
+    </select>
     <textarea class="char-notes" rows="2" placeholder="Особенности характера, внешность, важные детали…"></textarea>`;
   
-  card.querySelector(`#sliderGood_${id}`).addEventListener('input', e => {
-    card.querySelector(`#traitGood_${id}`).textContent = e.target.value;
-  });
-  card.querySelector(`#sliderIntro_${id}`).addEventListener('input', e => {
-    card.querySelector(`#traitIntro_${id}`).textContent = e.target.value;
-  });
   card.querySelector(`.char-remove`).addEventListener('click', () => card.remove());
   return card;
 }
@@ -237,14 +258,12 @@ function collectCharacters() {
   return Array.from(cards).map(card => {
     const id   = card.dataset.id;
     const name = card.querySelector('.char-name').value.trim() || `Персонаж ${id}`;
-    const role = card.querySelector(`input[name="role_${id}"]:checked`)?.value || '';
-    const good = card.querySelector(`#sliderGood_${id}`)?.value;
-    const intr = card.querySelector(`#sliderIntro_${id}`)?.value;
+    const arch = card.querySelector('.char-archetype').value;
     const note = card.querySelector('.char-notes')?.value.trim();
-    let desc = `${name} (${role}): добрый/злой — ${good}/10, интроверт/экстраверт — ${intr}/10`;
-    if (note) desc += `, ${note}`;
+    let desc = `${name} — Роль/Архетип: ${arch}`;
+    if (note) desc += `\nОписание: ${note}`;
     return desc;
-  }).join('\n');
+  }).join('\n\n');
 }
 
 /* ==========================================
@@ -269,13 +288,33 @@ fileArea.addEventListener('drop', e => {
 fileInput.addEventListener('change', e => { if (e.target.files[0]) loadImage(e.target.files[0]); });
 
 function loadImage(file) {
-  imageMime = file.type;
+  if (file.size > 10 * 1024 * 1024) {
+    alert('Файл слишком большой. Максимальный размер 10 МБ.');
+    return;
+  }
   const reader = new FileReader();
   reader.onload = e => {
-    base64Image = e.target.result.split(',')[1];
-    imagePreview.src = e.target.result;
-    uploadPlaceholder.style.display = 'none';
-    imagePreviewWrap.style.display  = 'block';
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const maxDim = 1024;
+      let w = img.width;
+      let h = img.height;
+      if (w > maxDim || h > maxDim) {
+        if (w > h) { h = (h / w) * maxDim; w = maxDim; }
+        else { w = (w / h) * maxDim; h = maxDim; }
+      }
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/webp', 0.8);
+      base64Image = dataUrl.split(',')[1];
+      imageMime = 'image/webp';
+      imagePreview.src = dataUrl;
+      uploadPlaceholder.style.display = 'none';
+      imagePreviewWrap.style.display  = 'block';
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
@@ -289,22 +328,13 @@ document.getElementById('removeImage').addEventListener('click', e => {
 /* ==========================================
    ПОЛЗУНКИ
 ========================================== */
-const toneSlider   = document.getElementById('toneSlider');
-const toneValue    = document.getElementById('toneValue');
 const lengthSlider = document.getElementById('lengthSlider');
 const lengthValue  = document.getElementById('lengthValue');
 
-const TONE_LABELS = {
-  1:'1 — Чистая трагедия', 2:'2 — Тяжёлый ангст', 3:'3 — Много драмы',
-  4:'4 — Напряжение', 5:'5 — Баланс', 6:'6 — Лёгкая грусть',
-  7:'7 — Тепло', 8:'8 — Уютно', 9:'9 — Очень мило', 10:'10 — Чистый флафф'
-};
 const LENGTH_LABELS = {
   1:'Короткая (~1-2 тыс. слов)', 2:'Средняя (~3-5 тыс. слов)', 3:'Длинная (~6-8 тыс. слов)'
 };
-toneSlider.addEventListener('input', () => { toneValue.textContent = TONE_LABELS[toneSlider.value]; });
 lengthSlider.addEventListener('input', () => { lengthValue.textContent = LENGTH_LABELS[lengthSlider.value]; });
-toneValue.textContent   = TONE_LABELS[5];
 lengthValue.textContent = LENGTH_LABELS[2];
 
 /* ==========================================
@@ -353,7 +383,7 @@ function collectForm() {
     genres:          getSelectedGenres(),
     plotDescription: document.getElementById('plotDescription').value.trim(),
     authorNotes:     document.getElementById('authorNotes').value.trim(),
-    tone:            parseInt(toneSlider.value),
+
     length:          parseInt(lengthSlider.value),
     addProfanity:    document.getElementById('cbProfanity').checked,
     charDeath:       document.getElementById('cbCharDeath').checked,
@@ -374,12 +404,18 @@ function buildStoryPrompt(data, previousText = '') {
     scene:   'Одна конкретная сцена — без экспозиции, сразу погружение в момент'
   };
 
-  let p = `Ты талантливый и профессиональный писатель-фикрайтер. Напиши художественный текст на русском языке.\n\n`;
+  const system = `Ты талантливый и профессиональный писатель-фикрайтер. Напиши художественный текст на русском языке. Пиши сразу готовый художественный текст без предисловий. Используй абзацы, описания и живые диалоги. Учитывай все указания пользователя.`;
+
+  let p = '';
   if (previousText) {
     p += `ВОТ УЖЕ НАПИСАННЫЙ ТЕКСТ, который нужно продолжить:\n"""\n${previousText}\n"""\n\nНапиши следующую часть, сохраняя тот же стиль, темп и голос повествования. НЕ повторяй уже написанный текст.\n\n`;
   }
-  if (data.storyType === 'fandom' && data.fandomName) p += `Фандом: ${data.fandomName}\n`;
-  else p += `Тип: Ориджинал (оригинальная история)\n`;
+  if (data.storyType === 'fandom' && data.fandomName) {
+    p += `Фандом: ${data.fandomName}\n`;
+    p += `ВАЖНО: Если персонажи или события явно не указаны, СТРОГО следуй официальному канону выбранного фандома. Не выдумывай новых персонажей и события, противоречащие лору.\n`;
+  } else {
+    p += `Тип: Ориджинал (оригинальная история)\n`;
+  }
   if (data.pairings)   p += `Пэйринги: ${data.pairings}\n`;
   if (data.characters) p += `Персонажи:\n${data.characters}\n`;
   if (data.genres?.length) p += `Жанры: ${data.genres.join(', ')}\n`;
@@ -389,34 +425,57 @@ function buildStoryPrompt(data, previousText = '') {
   if (data.authorNotes) p += `Пожелания: ${data.authorNotes}\n`;
   const lengths = { 1:'~500-1000 слов', 2:'~1500-3000 слов', 3:'~4000+ слов' };
   p += `Объём: ${lengths[data.length]}\n`;
-  p += `Тональность (1-трагедия, 10-флафф): ${data.tone}/10\n`;
   const triggers = [];
   if (data.addProfanity) triggers.push('нецензурная лексика разрешена');
   if (data.charDeath) triggers.push('СМЕРТЬ ОСНОВНОГО ПЕРСОНАЖА');
   if (data.triggerWarnings) triggers.push(data.triggerWarnings);
   if (triggers.length) p += `Предупреждения: ${triggers.join(', ')}\n`;
   if (data.image) p += `\nПрикреплена картинка-референс. Учти её атмосферу и детали в тексте.\n`;
-  p += `\nПиши сразу готовый художественный текст без предисловий. Используй абзацы, описания и живые диалоги.`;
-  return p;
+  return { system, user: p };
 }
 
 /* ==========================================
    GEMINI API
 ========================================== */
-async function callGemini(promptText, imageData = null, mimeType = null) {
+let currentAbortController = null;
+
+async function callGemini(promptText, systemText = '', imageData = null, mimeType = null, retries = 3) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${userGeminiKey}`;
-  const parts = [{ text: promptText }];
+  const parts = [{ text: `<user_prompt>\n${promptText}\n</user_prompt>` }];
   if (imageData && mimeType) parts.push({ inline_data: { mime_type: mimeType, data: imageData } });
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents: [{ parts }], generationConfig: { temperature: 0.9 } })
-  });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error?.message || 'Ошибка сервера');
-  if (!data.candidates?.[0]?.content) throw new Error('Нейросеть вернула пустой ответ');
-  return data.candidates[0].content.parts[0].text;
+  const payload = { contents: [{ parts }], generationConfig: { temperature: 0.9 } };
+  if (systemText) {
+    payload.system_instruction = { parts: [{ text: systemText }] };
+  }
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      if (currentAbortController) currentAbortController.abort();
+      currentAbortController = new AbortController();
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: currentAbortController.signal
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        if (response.status === 429 && attempt < retries) {
+          console.warn(`Rate limit 429. Retrying...`);
+          await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));
+          continue;
+        }
+        throw new Error(data.error?.message || 'Ошибка сервера');
+      }
+      if (!data.candidates?.[0]?.content) throw new Error('Нейросеть вернула пустой ответ');
+      return data.candidates[0].content.parts[0].text;
+    } catch (err) {
+      if (err.name === 'AbortError') throw new Error('Запрос отменён новым действием');
+      if (attempt === retries) throw err;
+    }
+  }
 }
 
 /* ==========================================
@@ -430,19 +489,25 @@ const loadingModelInfo = document.getElementById('loadingModelInfo');
 let currentStoryData   = null;
 let currentStoryText   = '';
 
-async function runGeneration(prompt, imageData, mimeType, isEdit = false) {
+async function runGeneration(promptObj, imageData, mimeType, isEdit = false) {
   if (!requireApiKey()) return;
+  
+  document.querySelectorAll('.action-btn, .edit-btn, .generate-btn, .plot-action-btn').forEach(b => b.disabled = true);
   pagesContainer.style.display = 'none';
   tabNav.style.display         = 'none';
   resultScreen.classList.remove('visible');
-  loadingModelInfo.textContent = selectedModel.includes('pro')
-    ? 'Пишет Gemini 2.5 Pro (глубокая литература, чуть дольше)…'
+  loadingModelInfo.textContent = selectedModel.includes('3')
+    ? 'Пишет Gemini 3 Flash (новейшая модель, глубокий анализ)…'
+    : selectedModel.includes('lite')
+    ? 'Пишет Gemini 2.5 Flash Lite (сверхбыстрая генерация)…'
     : 'Пишет Gemini 2.5 Flash…';
   loadingScreen.classList.add('visible');
   startProgress('progressFill', 'progressNum');
 
   try {
-    const text = await callGemini(prompt, imageData, mimeType);
+    const userText = typeof promptObj === 'string' ? promptObj : promptObj.user;
+    const sysText  = typeof promptObj === 'string' ? '' : promptObj.system;
+    const text = await callGemini(userText, sysText, imageData, mimeType);
     finishProgress('progressFill', 'progressNum');
     setTimeout(() => {
       loadingScreen.classList.remove('visible');
@@ -452,12 +517,14 @@ async function runGeneration(prompt, imageData, mimeType, isEdit = false) {
         currentStoryText = text;
       }
       showResult(currentStoryText, currentStoryData);
+      document.querySelectorAll('.action-btn, .edit-btn, .generate-btn, .plot-action-btn').forEach(b => b.disabled = false);
     }, 700);
   } catch (err) {
     clearInterval(progressInterval);
     loadingScreen.classList.remove('visible');
     pagesContainer.style.display = 'block';
     tabNav.style.display         = 'flex';
+    document.querySelectorAll('.action-btn, .edit-btn, .generate-btn, .plot-action-btn').forEach(b => b.disabled = false);
     alert('❌ Ошибка: ' + err.message);
   }
 }
@@ -479,17 +546,30 @@ function showResult(text, data) {
   metaParts.push(`Рейтинг: ${data.rating}`);
   if (data.genres?.length) metaParts.push(data.genres.join(', '));
   document.getElementById('resultMeta').textContent = metaParts.join(' · ');
-  const html = text.trim().split(/\n{2,}/).map(p => `<p>${p.replace(/\n/g,'<br/>')}</p>`).join('');
+  
+  // XSS Protection and Markdown formatting
+  const html = DOMPurify.sanitize(marked.parse(text));
   document.getElementById('resultContent').innerHTML = html;
+  
   resultScreen.classList.add('visible');
   resultScreen.scrollIntoView({ behavior:'smooth', block:'start' });
 }
+
+let isLibraryEditMode = false;
 
 document.getElementById('newStoryBtn').addEventListener('click', () => {
   resultScreen.classList.remove('visible');
   pagesContainer.style.display = 'block';
   tabNav.style.display         = 'flex';
   window.scrollTo({ top:0, behavior:'smooth' });
+
+  if (isLibraryEditMode) {
+    document.querySelector('.tab-btn[data-tab="library"]').click();
+    isLibraryEditMode = false;
+    document.getElementById('newStoryBtn').textContent = '✍️ Новая история';
+  } else {
+    document.querySelector('.tab-btn[data-tab="create"]').click();
+  }
 });
 
 /* ==========================================
@@ -532,39 +612,85 @@ document.querySelectorAll('.edit-btn').forEach(btn => {
   });
 });
 
+document.getElementById('resultContent').addEventListener('input', (e) => {
+  currentStoryText = e.target.innerText;
+});
+
+document.getElementById('sendCustomEditBtn').addEventListener('click', async () => {
+  if (!requireApiKey()) return;
+  const userPrompt = document.getElementById('customEditPrompt').value.trim();
+  if (!userPrompt) return;
+  const prompt = `Пользовательский запрос к тексту: "${userPrompt}"\n\nТЕКСТ ДЛЯ РЕДАКТИРОВАНИЯ:\n"""\n${currentStoryText}\n"""\n\nВыполни этот запрос и верни ТОЛЬКО переработанный текст, без пояснений.`;
+  const btn = document.getElementById('sendCustomEditBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Отправляем...';
+  try {
+    const newText = await callGemini(prompt);
+    currentStoryText = newText;
+    showResult(currentStoryText, currentStoryData);
+    document.getElementById('customEditPrompt').value = '';
+  } catch (err) {
+    alert('❌ Ошибка: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Отправить запрос ИИ';
+  }
+});
+
+document.getElementById('toggleEditBtn').addEventListener('click', (e) => {
+  const btn = e.currentTarget;
+  const content = document.getElementById('resultContent');
+  const isEditing = content.getAttribute('contenteditable') === 'true';
+  if (isEditing) {
+    content.setAttribute('contenteditable', 'false');
+    btn.textContent = '✏️ Редактировать текст';
+    btn.style.background = 'rgba(196, 162, 89, 0.1)';
+    btn.style.color = 'var(--gold-light)';
+    currentStoryText = content.innerText;
+  } else {
+    content.setAttribute('contenteditable', 'true');
+    content.focus();
+    btn.textContent = '💾 Сохранить изменения';
+    btn.style.background = 'var(--gold)';
+    btn.style.color = 'var(--bg)';
+  }
+});
+
 /* ==========================================
    ЧИТАЛКА (тема, шрифт, размер)
 ========================================== */
 let fontSize = 16;
-let isDarkMode = false;
 let isSerif = true;
 
 document.getElementById('fontIncrease').addEventListener('click', () => {
   fontSize = Math.min(24, fontSize + 1);
   document.getElementById('resultContent').style.fontSize = fontSize + 'px';
+  document.querySelectorAll('#resultContent p, #resultContent h1, #resultContent h2, #resultContent h3, #resultContent ul, #resultContent li').forEach(el => {
+    el.style.fontSize = fontSize + 'px';
+  });
 });
 document.getElementById('fontDecrease').addEventListener('click', () => {
   fontSize = Math.max(12, fontSize - 1);
   document.getElementById('resultContent').style.fontSize = fontSize + 'px';
+  document.querySelectorAll('#resultContent p, #resultContent h1, #resultContent h2, #resultContent h3, #resultContent ul, #resultContent li').forEach(el => {
+    el.style.fontSize = fontSize + 'px';
+  });
 });
 document.getElementById('fontSerifToggle').addEventListener('click', () => {
   isSerif = !isSerif;
-  document.getElementById('resultContent').style.fontFamily = isSerif
-    ? "Georgia, 'Cormorant', serif"
-    : "'Helvetica Neue', Arial, sans-serif";
-});
-document.getElementById('darkModeToggle').addEventListener('click', () => {
-  isDarkMode = !isDarkMode;
-  document.getElementById('resultScreen').classList.toggle('dark-reader', isDarkMode);
-  document.getElementById('darkModeToggle').textContent = isDarkMode ? '☀️' : '🌙';
+  const fontFam = isSerif ? "Georgia, 'Cormorant', serif" : "'Helvetica Neue', Arial, sans-serif";
+  document.getElementById('resultContent').style.fontFamily = fontFam;
+  document.querySelectorAll('#resultContent p, #resultContent h1, #resultContent h2, #resultContent h3, #resultContent ul, #resultContent li').forEach(el => {
+    el.style.fontFamily = fontFam;
+  });
 });
 
 /* ==========================================
    СОХРАНИТЬ В БИБЛИОТЕКУ
 ========================================== */
-document.getElementById('saveLibraryBtn').addEventListener('click', () => {
+document.getElementById('saveLibraryBtn').addEventListener('click', async () => {
   if (!currentStoryData) return;
-  const library = getLibrary();
+  const library = await getLibraryAsync();
   if (library.some(i => i.text === currentStoryText)) {
     showSavedFeedback('✅ Уже сохранено!'); return;
   }
@@ -574,8 +700,9 @@ document.getElementById('saveLibraryBtn').addEventListener('click', () => {
     meta:  document.getElementById('resultMeta').textContent,
     text:  currentStoryText,
     date:  new Date().toLocaleDateString('ru-RU'),
+    data:  currentStoryData
   });
-  localStorage.setItem('fanfic_library', JSON.stringify(library));
+  await localforage.setItem('fanfic_library', library);
   showSavedFeedback('✅ Сохранено!');
 });
 function showSavedFeedback(msg) {
@@ -592,60 +719,128 @@ function buildTitle(d) {
 }
 
 /* ==========================================
-   PDF — ЧЕРЕЗ WINDOW.PRINT()
+   PDF
 ========================================== */
-document.getElementById('downloadPdfBtn').addEventListener('click', () => {
-  document.getElementById('printTitle').textContent   = document.getElementById('resultTitle').textContent;
-  document.getElementById('printMeta').textContent    = document.getElementById('resultMeta').textContent;
-  document.getElementById('printContent').innerHTML   = document.getElementById('resultContent').innerHTML;
-  window.print();
+/* ==========================================
+   PDF
+========================================== */
+document.getElementById('downloadPdfBtn').addEventListener('click', (e) => {
+  const title = document.getElementById('resultTitle').textContent || "История";
+  document.getElementById('printTitle').textContent = title;
+  document.getElementById('printMeta').textContent = document.getElementById('resultMeta').textContent;
+  document.getElementById('printContent').innerHTML = document.getElementById('resultContent').innerHTML;
+  
+  // Краткая задержка для рендера DOM перед печатью
+  setTimeout(() => window.print(), 100);
 });
 
 /* ==========================================
    БИБЛИОТЕКА
 ========================================== */
-function getLibrary() {
-  return JSON.parse(localStorage.getItem('fanfic_library') || '[]');
+async function getLibraryAsync() {
+  const lib = await localforage.getItem('fanfic_library');
+  return lib || [];
 }
-function renderLibrary() {
-  const list      = getLibrary();
+
+async function renderLibrary() {
+  const list = await getLibraryAsync();
   const container = document.getElementById('libraryList');
   if (!list.length) {
     container.innerHTML = '<p class="empty-library">Твоя библиотека пуста.<br/>Создай первую историю!</p>';
     return;
   }
-  container.innerHTML = list.map(item => `
-    <div class="library-item">
-      <div class="lib-item-title">${escapeHtml(item.title)}</div>
-      <div class="lib-item-meta">${escapeHtml(item.meta)} · ${item.date}</div>
-      <div class="lib-item-preview">${escapeHtml(item.text.slice(0,160))}…</div>
-      <div class="lib-item-actions">
-        <button class="lib-btn read-btn" data-id="${item.id}">📖 Читать</button>
-        <button class="lib-btn delete del-btn" data-id="${item.id}">🗑️ Удалить</button>
-      </div>
-    </div>`).join('');
-  container.querySelectorAll('.read-btn').forEach(btn =>
-    btn.addEventListener('click', () => openModal(parseInt(btn.dataset.id))));
-  container.querySelectorAll('.del-btn').forEach(btn =>
-    btn.addEventListener('click', () => deleteItem(parseInt(btn.dataset.id))));
+  container.innerHTML = '';
+  
+  list.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'library-item';
+    
+    const title = document.createElement('div');
+    title.className = 'lib-item-title';
+    title.textContent = `📜 ${item.title}`;
+    
+    const meta = document.createElement('div');
+    meta.className = 'lib-item-meta';
+    meta.textContent = `📅 ${item.date} · 🏷️ ${item.meta}`;
+    
+    const prev = document.createElement('div');
+    prev.className = 'lib-item-preview';
+    prev.textContent = item.text.slice(0, 160) + '…';
+    
+    const actions = document.createElement('div');
+    actions.className = 'lib-item-actions';
+    
+    const btnRead = document.createElement('button');
+    btnRead.className = 'lib-btn read-btn';
+    btnRead.textContent = '📖 Читать';
+    btnRead.onclick = () => openModal(item.id);
+    
+    const btnPdf = document.createElement('button');
+    btnPdf.className = 'lib-btn pdf-btn';
+    btnPdf.textContent = '📄 PDF';
+    btnPdf.onclick = (e) => downloadItemPdf(item, e.currentTarget);
+
+    const btnCont = document.createElement('button');
+    btnCont.className = 'lib-btn play-btn';
+    btnCont.textContent = '✍️ Продолжить';
+    btnCont.onclick = () => continueLibraryStory(item);
+    
+    const btnDel = document.createElement('button');
+    btnDel.className = 'lib-btn delete del-btn';
+    btnDel.textContent = '🗑️ Удалить';
+    btnDel.onclick = () => deleteItem(item.id);
+    
+    actions.append(btnRead, btnCont, btnPdf, btnDel);
+    el.append(title, meta, prev, actions);
+    container.append(el);
+  });
+}
+
+function downloadItemPdf(item, btn) {
+  document.getElementById('printTitle').textContent = item.title.replace('📜 ', '');
+  document.getElementById('printMeta').textContent = item.meta.replace('📅 ', '').replace('🏷️ ', '');
+  document.getElementById('printContent').innerHTML = DOMPurify.sanitize(marked.parse(item.text));
+  
+  // Краткая задержка для рендера DOM перед печатью
+  setTimeout(() => window.print(), 100);
+}
+
+
+function continueLibraryStory(item) {
+  currentStoryData = item.data || { plotDescription: item.title }; 
+  currentStoryText = item.text;
+  isLibraryEditMode = true;
+
+  pagesContainer.style.display = 'none';
+  tabNav.style.display = 'none';
+  
+  document.getElementById('newStoryBtn').textContent = '⬅ Назад в библиотеку';
+  
+  showResult(currentStoryText, currentStoryData);
 }
 
 let currentModalItemId = null;
 
 function openModal(id) {
-  const item = getLibrary().find(i => i.id === id);
-  if (!item) return;
-  currentModalItemId = id;
-  document.getElementById('modalTitle').textContent   = item.title;
-  document.getElementById('modalContent').textContent = item.text;
-  document.getElementById('summaryResult').style.display = 'none';
-  document.getElementById('readModal').classList.add('open');
+  getLibraryAsync().then(library => {
+    const item = library.find(i => i.id === id);
+    if (!item) return;
+    currentModalItemId = id;
+    document.getElementById('modalTitle').textContent   = item.title;
+    const html = DOMPurify.sanitize(marked.parse(item.text));
+    document.getElementById('modalContent').innerHTML = html;
+    document.getElementById('summaryResult').style.display = 'none';
+    document.getElementById('readModal').classList.add('open');
+  });
 }
-function deleteItem(id) {
+
+async function deleteItem(id) {
   if (!confirm('Удалить эту историю?')) return;
-  localStorage.setItem('fanfic_library', JSON.stringify(getLibrary().filter(i => i.id !== id)));
+  const list = await getLibraryAsync();
+  await localforage.setItem('fanfic_library', list.filter(i => i.id !== id));
   renderLibrary();
 }
+
 document.getElementById('modalClose').addEventListener('click', () =>
   document.getElementById('readModal').classList.remove('open'));
 document.getElementById('readModal').addEventListener('click', e => {
@@ -658,7 +853,8 @@ document.getElementById('readModal').addEventListener('click', e => {
 ========================================== */
 document.getElementById('modalSummaryBtn').addEventListener('click', async () => {
   if (!requireApiKey()) return;
-  const item = getLibrary().find(i => i.id === currentModalItemId);
+  const library = await getLibraryAsync();
+  const item = library.find(i => i.id === currentModalItemId);
   if (!item) return;
 
   const btn = document.getElementById('modalSummaryBtn');
@@ -739,25 +935,29 @@ document.getElementById('generatePlotBtn').addEventListener('click', async () =>
   document.getElementById('plotResult').style.display = 'none';
   plotLoadingScreen.classList.add('visible');
   startProgress('plotProgressFill', 'plotProgressNum');
+  document.getElementById('generatePlotBtn').disabled = true;
 
   try {
-    const prompt = `Ты профессиональный автор. На основе краткой идеи напиши подробный сюжет-синопсис (до 1000 слов) на русском языке.
+    const prompt = `Ты профессиональный писатель. На основе краткой идеи разработай четкий, структурированный план сюжета (идеальный промпт для последующей генерации).
+Не пиши лишней воды и длинных вступлений. Сразу выдавай структуру:
 
-Структура:
-1. **Завязка** — мир, герои, начальный конфликт
-2. **Развитие** — нарастание напряжения, ключевые события
-3. **Кульминация** — главное столкновение или открытие
-4. **Развязка** — итог, что меняется в героях
+1. **Завязка**: (описание)
+2. **Развитие конфликта**: (описание)
+3. **Кульминация**: (описание)
+4. **Развязка**: (описание)
 
-Идея: ${input}`;
-    const text = await callGemini(prompt);
+Сюжетная идея пользователя: ${input}`;
+    const sysInst = 'Ты профи-сценарист. Выдавай только структурированный план.';
+    const text = await callGemini(prompt, sysInst);
     finishProgress('plotProgressFill', 'plotProgressNum');
     setTimeout(() => {
       plotLoadingScreen.classList.remove('visible');
       document.getElementById('plotResultText').textContent = text;
       document.getElementById('plotResult').style.display = 'block';
+      document.getElementById('generatePlotBtn').disabled = false;
     }, 600);
   } catch (err) {
+    document.getElementById('generatePlotBtn').disabled = false;
     clearInterval(progressInterval);
     plotLoadingScreen.classList.remove('visible');
     alert('❌ Ошибка: ' + err.message);
@@ -836,9 +1036,4 @@ document.getElementById('dicePlot')?.addEventListener('click', () => {
 /* ==========================================
    ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 ========================================== */
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
+// escapeHtml is no longer needed since DOM element textContent is now used exclusively
