@@ -8,6 +8,8 @@ import { buildStoryPrompt } from './prompt.js';
 import { FANFIC_IDEAS, RANDOM_DATA, getNextIdea } from './data.js';
 import { runGeneration, showResult, initEditActions, startProgress, finishProgress } from './generation.js';
 import { renderLibrary, initLibrary } from './library.js';
+import { initCovers } from './covers.js';
+import { initStats } from './stats.js';
 
 /* ==========================================
    SETTINGS & API KEY
@@ -370,3 +372,5 @@ document.getElementById('dicePlot')?.addEventListener('click', () => {
 ========================================== */
 initEditActions();
 initLibrary();
+initCovers();
+initStats();

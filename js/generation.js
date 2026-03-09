@@ -1,6 +1,7 @@
 import { state } from './state.js';
 import { callGemini, requireApiKey } from './api.js';
 import { buildStoryPrompt } from './prompt.js';
+import { updateStats } from './stats.js';
 
 /* ==========================================
    PROGRESS
@@ -44,6 +45,7 @@ export function showResult(text, data) {
   const resultScreen = document.getElementById('resultScreen');
   resultScreen.classList.add('visible');
   resultScreen.scrollIntoView({ behavior:'smooth', block:'start' });
+  updateStats();
 }
 
 /* ==========================================

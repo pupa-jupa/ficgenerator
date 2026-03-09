@@ -801,6 +801,84 @@
           <button class="action-btn" id="sendCustomEditBtn" style="width: 100%;">Отправить запрос ИИ</button>
         </div>
 
+        <!-- СТАТИСТИКА -->
+        <div class="stats-panel" id="statsPanel" style="display: none;">
+          <div class="stats-header">
+            <span class="stats-ornament">❦</span>
+            <h3 class="stats-title">Статистика текста</h3>
+            <span class="stats-ornament">❦</span>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card" id="statWords">
+              <span class="stat-icon">📝</span>
+              <span class="stat-value">0</span>
+              <span class="stat-label">Слов</span>
+            </div>
+            <div class="stat-card" id="statChars">
+              <span class="stat-icon">🔤</span>
+              <span class="stat-value">0</span>
+              <span class="stat-label">Знаков</span>
+            </div>
+            <div class="stat-card" id="statSentences">
+              <span class="stat-icon">📖</span>
+              <span class="stat-value">0</span>
+              <span class="stat-label">Предложений</span>
+            </div>
+            <div class="stat-card" id="statParagraphs">
+              <span class="stat-icon">📄</span>
+              <span class="stat-value">0</span>
+              <span class="stat-label">Абзацев</span>
+            </div>
+            <div class="stat-card stat-accent" id="statReading">
+              <span class="stat-icon">⏱️</span>
+              <span class="stat-value">0</span>
+              <span class="stat-label">Чтение</span>
+            </div>
+            <div class="stat-card" id="statAvgWord">
+              <span class="stat-icon">📏</span>
+              <span class="stat-value">0</span>
+              <span class="stat-label">Средн. слово</span>
+            </div>
+            <div class="stat-card" id="statDialogue">
+              <span class="stat-icon">💬</span>
+              <span class="stat-value">0</span>
+              <span class="stat-label">Диалогов</span>
+            </div>
+            <div class="stat-card" id="statLongest">
+              <span class="stat-icon">📐</span>
+              <span class="stat-value">0</span>
+              <span class="stat-label">Макс. предл.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ОБЛОЖКА -->
+        <div class="cover-section" id="coverSection">
+          <div class="cover-header">
+            <span class="stats-ornament">❦</span>
+            <h3 class="stats-title">Обложка истории</h3>
+            <span class="stats-ornament">❦</span>
+          </div>
+          <div class="cover-frame">
+            <div class="cover-placeholder" id="coverPlaceholder">
+              <span class="cover-placeholder-icon">🎨</span>
+              <span>Нажми кнопку, чтобы сгенерировать обложку для твоей истории</span>
+            </div>
+            <div class="cover-loading" id="coverLoading" style="display: none;">
+              <div class="cover-spinner"></div>
+              <span>Рисую обложку…</span>
+            </div>
+            <div class="cover-result" id="coverResult" style="display: none;">
+              <img id="coverImage" class="cover-img" alt="Обложка истории" />
+            </div>
+          </div>
+          <div class="cover-actions">
+            <button class="action-btn" id="generateCoverBtn">🎨 Сгенерировать обложку</button>
+            <button class="action-btn" id="retryCoverBtn" style="display: none;">🔄 Другой вариант</button>
+            <button class="action-btn" id="downloadCoverBtn" style="display: none;">⬇️ Скачать</button>
+          </div>
+        </div>
+
         <div class="result-actions" style="margin-top: 30px;">
           <button class="action-btn" id="saveLibraryBtn">
             📚 Сохранить в библиотеку

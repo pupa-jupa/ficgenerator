@@ -1462,3 +1462,199 @@ input[type="range"] {
     color: #000;
   }
 }
+
+/* ==========================================
+   STATISTICS PANEL
+========================================== */
+.stats-panel {
+  margin-top: 28px;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--frame);
+  border-radius: 12px;
+  position: relative;
+}
+.stats-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stats-title {
+  font-family: var(--font-title);
+  color: var(--gold);
+  font-size: 1.2rem;
+  letter-spacing: 0.05em;
+}
+.stats-ornament {
+  color: var(--gold);
+  opacity: 0.5;
+  font-size: 1rem;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.stat-card {
+  background: rgba(196, 162, 89, 0.06);
+  border: 1px solid rgba(196, 162, 89, 0.15);
+  border-radius: 10px;
+  padding: 16px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.stat-card:hover {
+  background: rgba(196, 162, 89, 0.12);
+  border-color: rgba(196, 162, 89, 0.3);
+  transform: translateY(-2px);
+}
+.stat-card:hover::before {
+  opacity: 1;
+}
+.stat-card.stat-accent {
+  background: rgba(196, 162, 89, 0.12);
+  border-color: rgba(196, 162, 89, 0.3);
+}
+.stat-icon {
+  font-size: 1.4rem;
+  filter: grayscale(0.2);
+}
+.stat-value {
+  font-family: var(--font-title);
+  font-size: 1.5rem;
+  color: var(--gold-light);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.stat-label {
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ==========================================
+   COVER ART SECTION
+========================================== */
+.cover-section {
+  margin-top: 28px;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--frame);
+  border-radius: 12px;
+}
+.cover-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.cover-frame {
+  position: relative;
+  width: 100%;
+  max-width: 384px;
+  margin: 0 auto;
+  aspect-ratio: 3 / 4;
+  border: 2px solid var(--frame);
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 0 60px rgba(196, 162, 89, 0.05);
+}
+.cover-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+  color: var(--text2);
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 20px;
+}
+.cover-placeholder-icon {
+  font-size: 3rem;
+  filter: grayscale(0.3);
+}
+.cover-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 16px;
+  color: var(--gold-light);
+  font-family: var(--font-ui);
+  font-size: 0.95rem;
+}
+.cover-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(196, 162, 89, 0.2);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: coverSpin 0.9s linear infinite;
+}
+@keyframes coverSpin {
+  to { transform: rotate(360deg); }
+}
+.cover-result {
+  width: 100%;
+  height: 100%;
+}
+.cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  animation: coverFadeIn 0.6s ease;
+}
+@keyframes coverFadeIn {
+  from { opacity: 0; transform: scale(1.02); }
+  to { opacity: 1; transform: scale(1); }
+}
+.cover-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+/* Responsive stats */
+@media (max-width: 600px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .stat-value {
+    font-size: 1.3rem;
+  }
+  .cover-frame {
+    max-width: 280px;
+  }
+}
+
