@@ -184,35 +184,7 @@ document.querySelectorAll('input[name="storyType"]').forEach(r => {
   });
 });
 
-/* ==========================================
-   РАНДОМ КНОПКИ (Фандом и Пэйринг)
-========================================== */
-const randomFandoms = [
-  "Гарри Поттер", "Шерлок", "Genshin Impact", "Ведьмак", 
-  "Звёздные войны", "Атака Титанов", "Marvel", "Киберпанк 2077",
-  "Сверхъестественное", "Властелин Колец"
-];
-const randomPairings = [
-  "Враги в любовники", "Друзья детства", "Коллеги", 
-  "Главный герой / Антагонист", "Следователь / Подозреваемый",
-  "Наставник / Ученик", "Ангел / Демон"
-];
-
-document.querySelectorAll('button[data-tooltip="Случайный фандом"]').forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    e.preventDefault();
-    const input = document.getElementById('fandomName');
-    input.value = randomFandoms[Math.floor(Math.random() * randomFandoms.length)];
-  });
-});
-
-document.querySelectorAll('button[data-tooltip="Случайный пэйринг"]').forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    e.preventDefault();
-    const input = document.getElementById('pairings');
-    input.value = randomPairings[Math.floor(Math.random() * randomPairings.length)];
-  });
-});
+/* Random button duplicates removed — logic handled by RANDOM_DATA + dice buttons below */
 
 /* ==========================================
    КАРТОЧКИ ПЕРСОНАЖЕЙ
@@ -313,6 +285,8 @@ function loadImage(file) {
       imagePreview.src = dataUrl;
       uploadPlaceholder.style.display = 'none';
       imagePreviewWrap.style.display  = 'block';
+      // Release canvas/image memory
+      canvas.width = 0; canvas.height = 0;
     };
     img.src = e.target.result;
   };
@@ -365,7 +339,7 @@ function setProgress(fillId, numId, val) {
   document.getElementById(numId).textContent     = val + '%';
 }
 function finishProgress(fillId, numId) {
-  if (progressInterval) clearInterval(progressInterval);
+  if (progressInterval) { clearInterval(progressInterval); progressInterval = null; }
   setProgress(fillId, numId, 100);
 }
 
@@ -397,12 +371,24 @@ function collectForm() {
 /* ==========================================
    ПОСТРОЕНИЕ ПРОМПТА
 ========================================== */
+function sanitizePromptInput(str) {
+  if (!str) return '';
+  return str.replace(/</g, '＜').replace(/>/g, '＞').replace(/\n{3,}/g, '\n\n');
+}
+
 function buildStoryPrompt(data, previousText = '') {
   const formatMap = {
     full:    'Полная история (законченный one-shot с началом, серединой и финалом)',
     chapter: 'Только первая глава — обрывается на самом интересном месте, как продолжение следует',
     scene:   'Одна конкретная сцена — без экспозиции, сразу погружение в момент'
   };
+
+  // Sanitize all user inputs against prompt injection
+  const san = sanitizePromptInput;
+  data = { ...data, fandomName: san(data.fandomName), pairings: san(data.pairings),
+    characters: san(data.characters), plotDescription: san(data.plotDescription),
+    authorNotes: san(data.authorNotes), triggerWarnings: san(data.triggerWarnings) };
+  if (previousText) previousText = san(previousText);
 
   const system = `Ты талантливый и профессиональный писатель-фикрайтер. Напиши художественный текст на русском языке. Пиши сразу готовый художественный текст без предисловий. Используй абзацы, описания и живые диалоги. Учитывай все указания пользователя.
 
@@ -537,12 +523,14 @@ async function runGeneration(promptObj, imageData, mimeType, isEdit = false) {
       loadingScreen.classList.remove('visible');
       
       let parsedText = text;
-      const storyMatch = text.match(/<story>([\s\S]*?)<\/story>/i);
+      const storyMatch = text.match(/<story>([\s\S]*)<\/story>/i);
       if (storyMatch) {
         parsedText = storyMatch[1].trim();
       } else {
         parsedText = text.replace(/<planning>[\s\S]*?<\/planning>/gi, '').trim();
       }
+      // Clean any remaining XML formatting tags from LLM output
+      parsedText = parsedText.replace(/<\/?(planning|story|context|rules|plot_directive|pacing|fandom|rating|format|canon_rule|warnings|author_notes|image_instruction|previous_text|user_prompt)[^>]*>/gi, '').trim();
 
       if (isEdit) {
         currentStoryText += '\n\n─────────────────\n\n' + parsedText;
@@ -573,6 +561,7 @@ document.getElementById('generateBtn').addEventListener('click', () => {
    РЕЗУЛЬТАТ
 ========================================== */
 function showResult(text, data) {
+  if (!data) return;
   const metaParts = [];
   if (data.storyType === 'fandom' && data.fandomName) metaParts.push(`Фандом: ${data.fandomName}`);
   if (data.pairings) metaParts.push(`Пэйринг: ${data.pairings}`);
@@ -636,7 +625,7 @@ document.querySelectorAll('.edit-btn').forEach(btn => {
       currentStoryText = newText;
       showResult(currentStoryText, currentStoryData);
     } catch (err) {
-      alert('❌ Ошибка: ' + err.message);
+      if (err.message !== 'Запрос отменён новым действием') alert('❌ Ошибка: ' + err.message);
     } finally {
       btn.disabled = false;
       const labels = { drama:'🌹 Добавить драму', twist:'⚡ Сюжетный поворот', fluff:'☁️ Добавить флафф', dialogue:'💬 Добавить диалог' };
@@ -645,8 +634,12 @@ document.querySelectorAll('.edit-btn').forEach(btn => {
   });
 });
 
-document.getElementById('resultContent').addEventListener('input', (e) => {
-  currentStoryText = e.target.innerText;
+let contentEditDebounce = null;
+document.getElementById('resultContent').addEventListener('input', () => {
+  clearTimeout(contentEditDebounce);
+  contentEditDebounce = setTimeout(() => {
+    currentStoryText = document.getElementById('resultContent').innerText;
+  }, 300);
 });
 
 document.getElementById('sendCustomEditBtn').addEventListener('click', async () => {
@@ -695,27 +688,23 @@ document.getElementById('toggleEditBtn').addEventListener('click', (e) => {
 let fontSize = 16;
 let isSerif = true;
 
+function applyReaderStyle(prop, value) {
+  const el = document.getElementById('resultContent');
+  el.style[prop] = value;
+  el.querySelectorAll('p, h1, h2, h3, ul, li').forEach(c => c.style[prop] = value);
+}
+
 document.getElementById('fontIncrease').addEventListener('click', () => {
   fontSize = Math.min(24, fontSize + 1);
-  document.getElementById('resultContent').style.fontSize = fontSize + 'px';
-  document.querySelectorAll('#resultContent p, #resultContent h1, #resultContent h2, #resultContent h3, #resultContent ul, #resultContent li').forEach(el => {
-    el.style.fontSize = fontSize + 'px';
-  });
+  applyReaderStyle('fontSize', fontSize + 'px');
 });
 document.getElementById('fontDecrease').addEventListener('click', () => {
   fontSize = Math.max(12, fontSize - 1);
-  document.getElementById('resultContent').style.fontSize = fontSize + 'px';
-  document.querySelectorAll('#resultContent p, #resultContent h1, #resultContent h2, #resultContent h3, #resultContent ul, #resultContent li').forEach(el => {
-    el.style.fontSize = fontSize + 'px';
-  });
+  applyReaderStyle('fontSize', fontSize + 'px');
 });
 document.getElementById('fontSerifToggle').addEventListener('click', () => {
   isSerif = !isSerif;
-  const fontFam = isSerif ? "Georgia, 'Cormorant', serif" : "'Helvetica Neue', Arial, sans-serif";
-  document.getElementById('resultContent').style.fontFamily = fontFam;
-  document.querySelectorAll('#resultContent p, #resultContent h1, #resultContent h2, #resultContent h3, #resultContent ul, #resultContent li').forEach(el => {
-    el.style.fontFamily = fontFam;
-  });
+  applyReaderStyle('fontFamily', isSerif ? "Georgia, 'Cormorant', serif" : "'Helvetica Neue', Arial, sans-serif");
 });
 
 /* ==========================================
@@ -751,9 +740,6 @@ function buildTitle(d) {
   return 'Безымянная история';
 }
 
-/* ==========================================
-   PDF
-========================================== */
 /* ==========================================
    PDF
 ========================================== */
